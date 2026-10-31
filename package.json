@@ -1,0 +1,18 @@
+{
+  "name": "mdd",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k -n FRONTEND,BACKEND \"npm --prefix frontend run dev\" \"npm --prefix backend run dev\"",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:migrate": "npm --prefix backend run db:migrate",
+    "db:seed": "npm --prefix backend run db:seed",
+    "build": "npm --prefix frontend run build && npm --prefix backend run build"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
+}

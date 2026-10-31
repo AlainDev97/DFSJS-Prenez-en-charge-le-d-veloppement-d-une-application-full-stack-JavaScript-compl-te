@@ -1,112 +1,211 @@
 # MDD - Monde de Dév
 
-Réseau social pour développeurs
+MDD (Monde de Dév) est un réseau social destiné aux développeurs, développé dans le cadre du projet P5 de la formation OpenClassrooms Lead Developer JavaScript (RNCP 7).
 
-## Description
+L'objectif du MVP est de permettre aux utilisateurs de partager leurs connaissances autour de thèmes de programmation, de publier des articles et d'échanger par commentaires.
 
-MDD (Monde de Dév) est une plateforme permettant aux développeurs de s'abonner à des sujets de programmation, publier des articles et échanger via des commentaires.
+## 1. Fonctionnalités prévues
 
-## Getting Started
+- Inscription et connexion des utilisateurs.
+- Consultation et modification du profil.
+- Consultation des thèmes de programmation.
+- Abonnement et désabonnement aux thèmes.
+- Fil d'actualité personnalisé avec tri chronologique.
+- Publication et consultation d'articles.
+- Publication de commentaires.
 
-### Prerequisites
+Ces fonctionnalités constituent le périmètre du MVP et seront implémentées progressivement.
 
-- Node.js 22+
-- npm ou yarn
-- PostgreSQL
+## 2. Stack technique
 
-### Installation
+| Partie           | Technologies                                     |
+| ---------------- | ------------------------------------------------ |
+| Front-end        | Next.js 16, React 19, TypeScript, Tailwind CSS 4 |
+| Back-end         | Node.js 22, Express 5, TypeScript                |
+| Base de données  | PostgreSQL 17                                    |
+| ORM              | Prisma 7 et adaptateur PostgreSQL                |
+| Validation       | Zod 4                                            |
+| Sécurité         | Helmet, CORS, Argon2                             |
+| Conteneurisation | Docker Compose                                   |
+| Outils           | Git, GitHub, VS Code, DBeaver                    |
+
+L'application repose sur une architecture séparant le front-end Next.js et l'API REST Express, avec un seul repository GitHub.
+
+## 3. Structure du projet
+
+```text
+mdd/
+├── frontend/
+│   ├── app/
+│   ├── components/
+│   ├── features/
+│   ├── lib/
+│   └── package.json
+├── backend/
+│   ├── src/
+│   ├── prisma/
+│   │   ├── migrations/
+│   │   ├── schema.prisma
+│   │   └── seed.ts
+│   ├── prisma7.config.ts
+│   └── package.json
+├── docker-compose.yml
+├── package.json
+├── .env.example
+├── DOCUMENTATION.md
+└── README.md
+```
+
+Les pages Next.js communiqueront avec l'API REST Express. Les traitements métier seront organisés en services, tandis que Prisma assurera l'accès à PostgreSQL.
+
+## 4. Prérequis
+
+- Node.js 22 et npm.
+- Docker Desktop avec Docker Compose.
+- Git.
+- Un IDE, de préférence Visual Studio Code.
+
+DBeaver est facultatif et permet d'explorer visuellement les données PostgreSQL.
+
+## 5. Installation
+
+Cloner le repository :
 
 ```bash
-git clone <repository-url>
-cd P5-DFSJS
-npm install
+git clone https://github.com/AlainDev97/DFSJS-Prenez-en-charge-le-d-veloppement-d-une-application-full-stack-JavaScript-compl-te.git
 ```
 
-### Base de données (Docker)
+Se placer dans le dossier cloné.
 
-Lancer une instance PostgreSQL en local avec Docker :
+Installer les dépendances des trois parties du projet :
 
 ```bash
-docker run --name mdd-postgres -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=mdd_db -p 5432:5432 -d postgres:17
+npm ci
+npm --prefix frontend ci
+npm --prefix backend ci
 ```
 
-Pour arrêter / relancer le conteneur :
+## 6. Configuration des variables d'environnement
+
+Créer un fichier `.env` à la racine du repository à partir de `.env.example`.
+
+Renseigner les variables PostgreSQL :
+
+```dotenv
+POSTGRES_USER=mdd_user
+POSTGRES_PASSWORD=change_me
+POSTGRES_DB=mdd_db
+```
+
+Créer ensuite un fichier `backend/.env` à partir de `backend/.env.example` :
+
+```dotenv
+PORT=4000
+FRONTEND_URL=http://localhost:3000
+DATABASE_URL="postgresql://mdd_user:change_me@localhost:5433/mdd_db?schema=public"
+SEED_PASSWORD="ChangeMe123!"
+```
+
+Remplacer les mots de passe d'exemple par des valeurs locales sécurisées. Le mot de passe PostgreSQL doit correspondre dans les deux fichiers.
+
+Les fichiers `.env` ne doivent jamais être ajoutés au repository Git.
+
+## 7. Base de données PostgreSQL
+
+Depuis la racine du projet, démarrer PostgreSQL :
 
 ```bash
-docker stop mdd-postgres
-docker start mdd-postgres
+npm run db:up
 ```
 
-### Configuration
+Vérifier l'état du conteneur :
 
-1. Copier le fichier d'environnement :
 ```bash
-cp .env.example .env
+docker compose ps
 ```
 
-2. Les variables par défaut dans `.env` correspondent au conteneur Docker ci-dessus :
-```env
-DATABASE_URL="postgresql://user:password@localhost:5432/mdd_db?schema=public"
-AUTH_SECRET="your-secret-key-here-change-in-production"
-AUTH_URL="http://localhost:3000"
-```
+La base `mdd_db` est accessible localement sur le port `5433`.
 
-3. Initialiser la base de données :
+### Initialiser Prisma
+
+Pour une première installation, générer Prisma Client :
+
 ```bash
-npx prisma generate
-npx prisma db push
+npm --prefix backend exec -- prisma generate
 ```
 
-### Lancement
+Appliquer les migrations existantes :
+
+```bash
+npm --prefix backend exec -- prisma migrate deploy
+```
+
+Les tables créées sont `User`, `Topic`, `Subscription`, `Post` et `Comment`, ainsi que la table technique `_prisma_migrations`.
+
+### Données de test
+
+Pour peupler la base :
+
+```bash
+npm run db:seed
+```
+
+Le seed crée deux utilisateurs fictifs, quatre thèmes, quatre abonnements, deux articles et deux commentaires.
+
+Le script peut être relancé sans créer de doublons pour les données de démonstration qu'il gère.
+
+## 8. Démarrer l'application
+
+Depuis la racine du projet :
 
 ```bash
 npm run dev
 ```
 
-L'application sera accessible sur [http://localhost:3000](http://localhost:3000).
+Cette commande démarre simultanément Next.js et Express.
 
-## Tech Stack
+| Service                 | Adresse                             |
+| ----------------------- | ----------------------------------- |
+| Front-end Next.js       | http://localhost:3000               |
+| API Express             | http://localhost:4000               |
+| Vérification API        | http://localhost:4000/api/health    |
+| Vérification PostgreSQL | http://localhost:4000/api/health/db |
 
-- **Framework**: Next.js 16 (App Router)
-- **Langage**: TypeScript 5
-- **UI**: shadcn/ui + Tailwind CSS 4
-- **Base de données**: PostgreSQL
-- **ORM**: Prisma
-- **Validation**: Zod
+Les endpoints de vérification permettent de confirmer le fonctionnement de l'environnement.
 
-## Features
+Pour arrêter les serveurs applicatifs, utiliser `Ctrl+C`.
 
-- Authentification utilisateur (inscription/connexion)
-- Gestion de profil
-- Abonnement à des thèmes
-- Publication d'articles
-- Commentaires sur articles
-- Fil d'actualité personnalisé
+Pour arrêter PostgreSQL :
 
-## Project Structure
-
-```
-P5-DFSJS/
-├── app/               # App Router (Next.js 16)
-│   ├── layout.tsx
-│   └── page.tsx
-├── components/        # Composants UI (shadcn/ui)
-│   └── ui/
-├── lib/               # Utilitaires
-│   └── utils.ts
-├── prisma/            # Database schema
-│   └── schema.prisma
-├── public/            # Static files
-└── package.json
+```bash
+npm run db:down
 ```
 
-## Documentation
+Le volume Docker conserve les données lors d'un arrêt normal.
 
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Prisma Documentation](https://www.prisma.io/docs)
-- [shadcn/ui Documentation](https://ui.shadcn.com)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs)
+## 9. Scripts utiles
 
-## License
+| Commande               | Description                                            |
+| ---------------------- | ------------------------------------------------------ |
+| `npm run dev`          | Démarre le front-end et le back-end                    |
+| `npm run dev:frontend` | Démarre uniquement Next.js                             |
+| `npm run dev:backend`  | Démarre uniquement Express                             |
+| `npm run db:up`        | Démarre PostgreSQL                                     |
+| `npm run db:down`      | Arrête PostgreSQL                                      |
+| `npm run db:migrate`   | Crée ou applique une migration de développement Prisma |
+| `npm run db:seed`      | Ajoute les données de test                             |
+| `npm run build`        | Compile les applications front-end et back-end         |
 
-MIT License
+Les tests automatisés seront ajoutés lors des étapes de développement et de validation du MVP.
+
+## 10. Maquettes
+
+Les interfaces desktop et mobile seront intégrées à partir des maquettes Figma fournies dans le cadre du projet OpenClassrooms.
+
+La réalisation suivra les spécifications fonctionnelles, en privilégiant des composants réutilisables et un affichage responsive.
+
+## 11. Documentation technique
+
+Le fichier `DOCUMENTATION.md` présente les objectifs fonctionnels, les choix d'architecture, l'API REST prévue, les schémas de données ainsi que la stratégie de tests.
+
+Les résultats de tests, les mesures de performance, la revue technique et les annexes seront complétés au cours du développement.
