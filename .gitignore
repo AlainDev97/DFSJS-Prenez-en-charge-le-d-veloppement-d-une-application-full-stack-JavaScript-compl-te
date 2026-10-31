@@ -44,5 +44,5 @@ yarn-error.log*
 next-env.d.ts
 
 # Prisma
-# Les migrations doivent être versionnées dans Git.
-# Ne pas ignorer backend/prisma/migrations/
+# Prisma Client généré
+/backend/src/generated/prisma/
