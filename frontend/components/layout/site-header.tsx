@@ -1,17 +1,20 @@
 import Link from "next/link";
-import { Cloud, Menu, UserRound } from "lucide-react";
+import Image from "next/image";
+import { Menu, UserRound } from "lucide-react";
 
 export function SiteHeader() {
   return (
     <header className="border-b bg-background">
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
-        <Link
-          href="/"
-          aria-label="MDD - Accueil"
-          className="flex items-center gap-1 text-primary"
-        >
-          <Cloud className="size-9 fill-primary" aria-hidden="true" />
-          <span className="text-xl font-bold">MDD</span>
+        <Link href="/" aria-label="MDD - Accueil" className="flex items-center">
+          <Image
+            src="/logo.png"
+            alt="MDD - Monde de Dév"
+            width={140}
+            height={80}
+            className="object-contain"
+            priority
+          />
         </Link>
 
         <nav
