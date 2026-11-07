@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import { prisma } from "./lib/prisma.js";
+import { authRouter } from "./routes/auth.routes.js";
 import { topicsRouter } from "./routes/topics.routes.js";
 
 export const app = express();
@@ -19,6 +20,7 @@ app.use(
 app.use(express.json({ limit: "100kb" }));
 
 app.use("/api/topics", topicsRouter);
+app.use("/api/auth", authRouter);
 
 app.get("/api/health", (_req, res) => {
   res.status(200).json({
