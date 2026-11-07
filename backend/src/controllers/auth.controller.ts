@@ -132,4 +132,39 @@ export const authController = {
       });
     }
   },
+
+  /**
+   * Déconnecte l'utilisateur en invalidant sa session serveur.
+   *
+   * @param req - Requête contenant la session active.
+   * @param res - Réponse HTTP.
+   */
+  async logout(req: Request, res: Response) {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        req.session.destroy((error) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve();
+          }
+        });
+      });
+
+      res.clearCookie("mdd.sid", {
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+
+      res.status(204).end();
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion :", error);
+
+      res.status(500).json({
+        error: "Impossible de terminer la session.",
+      });
+    }
+  },
 };
