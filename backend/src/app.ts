@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import { prisma } from "./lib/prisma.js";
+import { sessionMiddleware } from "./middleware/session.middleware.js";
 import { authRouter } from "./routes/auth.routes.js";
 import { topicsRouter } from "./routes/topics.routes.js";
 
@@ -18,6 +19,7 @@ app.use(
 );
 
 app.use(express.json({ limit: "100kb" }));
+app.use(sessionMiddleware);
 
 app.use("/api/topics", topicsRouter);
 app.use("/api/auth", authRouter);

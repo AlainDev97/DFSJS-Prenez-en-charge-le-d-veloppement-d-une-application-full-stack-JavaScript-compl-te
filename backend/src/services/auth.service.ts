@@ -3,6 +3,7 @@ import { Prisma } from "../generated/prisma/client.js";
 
 import { authRepository } from "../repositories/auth.repository.js";
 import type { RegisterInput } from "../schemas/auth.schema.js";
+import type { LoginInput } from "../schemas/auth.schema.js";
 
 /**
  * Erreur métier signalant un conflit avec
@@ -12,6 +13,16 @@ export class UserAlreadyExistsError extends Error {
   constructor() {
     super("Email ou pseudo déjà utilisé.");
     this.name = "UserAlreadyExistsError";
+  }
+}
+
+/**
+ * Erreur métier levée lorsque les identifiants sont invalides.
+ */
+export class InvalidCredentialsError extends Error {
+  constructor() {
+    super("Email ou mot de passe incorrect.");
+    this.name = "InvalidCredentialsError";
   }
 }
 
@@ -42,5 +53,42 @@ export const authService = {
 
       throw error;
     }
+  },
+
+  /**
+   * Authentifie un utilisateur à partir de ses identifiants.
+   *
+   * @param data - Email et mot de passe validés.
+   * @returns Les informations publiques de l'utilisateur.
+   * @throws InvalidCredentialsError si l'authentification échoue.
+   */
+  async login(data: LoginInput) {
+    const user = await authRepository.findByEmail(data.email);
+
+    if (!user) {
+      throw new InvalidCredentialsError();
+    }
+
+    const passwordIsValid = await argon2.verify(
+      user.passwordHash,
+      data.password,
+    );
+
+    if (!passwordIsValid) {
+      throw new InvalidCredentialsError();
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+    };
+  },
+
+  /**
+   * Récupère l'utilisateur associé à une session.
+   */
+  getCurrentUser(userId: string) {
+    return authRepository.findPublicById(userId);
   },
 };
