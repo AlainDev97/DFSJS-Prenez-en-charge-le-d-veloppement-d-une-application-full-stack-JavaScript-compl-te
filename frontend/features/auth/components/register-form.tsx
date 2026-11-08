@@ -243,7 +243,7 @@ export function RegisterForm() {
           role="status"
           className="text-center text-sm text-green-700 dark:text-green-400"
         >
-          Compte créé avec succès ! La connexion sera bientôt disponible.
+          Compte créé avec succès ! Vous pouvez maintenant vous connecter.
         </p>
       )}
 
