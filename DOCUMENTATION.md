@@ -288,6 +288,37 @@ Pour répondre à l'exigence de posture Lead Developer, une tâche circonscrite 
 - Lien vers la Pull Request et, après revue, son état final.
 - Éventuels rapports Vitest / Playwright et audits Lighthouse, **si ces outils sont effectivement exécutés**.
 
+### Étape 5.3 - Authentification des utilisateurs
+
+**Objectif :** permettre aux utilisateurs de créer un compte, de se connecter, de conserver leur session et de se déconnecter.
+
+**Architecture :** Next.js 16 pour les interfaces, API REST Express avec séparation Controller / Service / Repository, Prisma et PostgreSQL pour les utilisateurs et les sessions.
+
+**Fonctionnalités implémentées :**
+
+- Inscription avec validation Zod et hachage Argon2.
+- Connexion avec vérification des identifiants et création d'une session.
+- Consultation de l'utilisateur connecté.
+- Déconnexion et destruction de la session.
+- Protection CSRF et limitation des tentatives.
+- Middleware de protection des routes privées.
+
+**Validation technique :** 12 tests automatisés validés le 8 novembre 2026 avec Vitest et Supertest. Vérification TypeScript réussie. Trois tests supplémentaires du service Argon2 proposés, en attente de validation.
+
+**Délégation et supervision des tests automatisés**
+
+La rédaction initiale des tests automatisés d'authentification a été déléguée à une intelligence artificielle (ChatGPT).
+
+En tant que Lead Developer, j'ai assuré la supervision de cette tâche en définissant les fonctionnalités à tester, en examinant le code généré, en intégrant les tests dans le projet et en exécutant leur validation avec Vitest et Supertest.
+
+Cette approche m'a permis de vérifier la conformité des tests aux besoins fonctionnels et aux choix architecturaux du projet, tout en conservant la responsabilité de leur validation finale.
+
+Les 12 premiers tests automatisés ont été exécutés avec succès.
+
+**Limites identifiées :** les compteurs de limitation de débit sont stockés en mémoire ; un stockage partagé sera nécessaire en environnement multi-instance. Les paramètres HTTPS, les cookies et le proxy inverse devront être validés avant un déploiement en production.
+
+**Conclusion :** le module d'authentification est fonctionnel et vérifié manuellement. Les tests automatisés couvrent les principaux parcours HTTP, et la couverture du service métier est en cours de finalisation.
+
 **Références du projet :**
 
 - [Dépôt GitHub MDD](https://github.com/AlainDev97/DFSJS-Prenez-en-charge-le-d-veloppement-d-une-application-full-stack-JavaScript-compl-te)
