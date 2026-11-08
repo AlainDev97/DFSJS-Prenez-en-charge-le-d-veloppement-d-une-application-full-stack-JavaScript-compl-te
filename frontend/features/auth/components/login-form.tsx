@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { postWithCsrf } from "@/lib/api-client";
 import { z } from "zod";
 
 const loginSchema = z.strictObject({
@@ -21,8 +22,6 @@ type FieldErrors = {
   email?: string;
   password?: string;
 };
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 /**
  * Formulaire de connexion à MDD.
@@ -72,14 +71,7 @@ export function LoginForm() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(parsed.data),
-      });
+      const response = await postWithCsrf("/api/auth/login", parsed.data);
 
       if (response.status === 401) {
         setServerError("Email ou mot de passe incorrect.");

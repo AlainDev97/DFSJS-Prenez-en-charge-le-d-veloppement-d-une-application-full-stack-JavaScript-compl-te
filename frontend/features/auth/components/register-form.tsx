@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { postWithCsrf } from "@/lib/api-client";
 import { z } from "zod";
 
 // Schéma de validation du formulaire d'inscription.
@@ -37,8 +38,6 @@ type RegisterFormValues = {
 type FieldName = keyof RegisterFormValues;
 
 type FieldErrors = Partial<Record<FieldName, string>>;
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 /**
  * Formulaire d'inscription MDD.
@@ -108,13 +107,7 @@ export function RegisterForm() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(parsed.data),
-      });
+      const response = await postWithCsrf("/api/auth/register", parsed.data);
 
       if (response.status === 409) {
         setServerError("Cette adresse e-mail ou ce pseudo est déjà utilisé.");

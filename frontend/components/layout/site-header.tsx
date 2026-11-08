@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { postWithCsrf } from "@/lib/api-client";
 import { Menu, UserRound } from "lucide-react";
 import { z } from "zod";
 
@@ -91,10 +92,7 @@ export function SiteHeader() {
     setLogoutError(null);
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
+      const response = await postWithCsrf("/api/auth/logout");
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
