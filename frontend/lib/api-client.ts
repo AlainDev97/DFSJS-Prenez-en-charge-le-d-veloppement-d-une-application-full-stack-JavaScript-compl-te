@@ -6,15 +6,19 @@ const csrfResponseSchema = z.object({
   csrfToken: z.string().regex(/^[0-9a-f]{64}$/),
 });
 
+type MutationMethod = "POST" | "DELETE";
+
 /**
- * Envoie une requête POST protégée par un jeton CSRF.
+ * Exécute une mutation HTTP protégée par un jeton CSRF.
  *
- * @param endpoint - Endpoint relatif de l'API.
+ * @param endpoint - Chemin relatif de l'API Express.
+ * @param method - Méthode HTTP autorisée.
  * @param data - Corps JSON facultatif.
- * @returns Réponse HTTP de l'API Express.
+ * @returns Réponse HTTP de l'API.
  */
-export async function postWithCsrf(
+async function requestWithCsrf(
   endpoint: string,
+  method: MutationMethod,
   data?: unknown,
 ): Promise<Response> {
   if (!endpoint.startsWith("/api/")) {
@@ -31,10 +35,11 @@ export async function postWithCsrf(
   }
 
   const json: unknown = await csrfResponse.json();
+
   const { csrfToken } = csrfResponseSchema.parse(json);
 
   return fetch(`${API_URL}${endpoint}`, {
-    method: "POST",
+    method,
     credentials: "include",
     headers: {
       "X-CSRF-Token": csrfToken,
@@ -42,4 +47,21 @@ export async function postWithCsrf(
     },
     ...(data !== undefined ? { body: JSON.stringify(data) } : {}),
   });
+}
+
+/**
+ * Effectue une requête POST protégée.
+ */
+export function postWithCsrf(
+  endpoint: string,
+  data?: unknown,
+): Promise<Response> {
+  return requestWithCsrf(endpoint, "POST", data);
+}
+
+/**
+ * Effectue une requête DELETE protégée.
+ */
+export function deleteWithCsrf(endpoint: string): Promise<Response> {
+  return requestWithCsrf(endpoint, "DELETE");
 }
