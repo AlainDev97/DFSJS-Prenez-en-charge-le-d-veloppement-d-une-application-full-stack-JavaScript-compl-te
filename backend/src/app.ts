@@ -5,6 +5,8 @@ import { prisma } from "./lib/prisma.js";
 import { sessionMiddleware } from "./middleware/session.middleware.js";
 import { authRouter } from "./routes/auth.routes.js";
 import { topicsRouter } from "./routes/topics.routes.js";
+import { subscriptionsRouter } from "./routes/subscriptions.routes.js";
+
 import { csrfProtection } from "./middleware/csrf.middleware.js";
 
 export const app = express();
@@ -25,6 +27,7 @@ app.use(sessionMiddleware);
 app.use(csrfProtection);
 app.use("/api/topics", topicsRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/subscriptions", subscriptionsRouter);
 
 app.get("/api/health", (_req, res) => {
   res.status(200).json({
