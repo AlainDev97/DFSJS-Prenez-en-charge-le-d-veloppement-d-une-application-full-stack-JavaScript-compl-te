@@ -6,6 +6,7 @@ import { sessionMiddleware } from "./middleware/session.middleware.js";
 import { authRouter } from "./routes/auth.routes.js";
 import { topicsRouter } from "./routes/topics.routes.js";
 import { subscriptionsRouter } from "./routes/subscriptions.routes.js";
+import { articlesRouter } from "./routes/articles.routes.js";
 
 import { csrfProtection } from "./middleware/csrf.middleware.js";
 
@@ -28,6 +29,7 @@ app.use(csrfProtection);
 app.use("/api/topics", topicsRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/subscriptions", subscriptionsRouter);
+app.use("/api/articles", articlesRouter);
 
 app.get("/api/health", (_req, res) => {
   res.status(200).json({
