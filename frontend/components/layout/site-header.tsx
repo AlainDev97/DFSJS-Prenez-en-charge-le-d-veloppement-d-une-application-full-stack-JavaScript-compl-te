@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { postWithCsrf } from "@/lib/api-client";
 import { Menu, UserRound } from "lucide-react";
 import { z } from "zod";
@@ -28,6 +28,7 @@ type AuthStatus = "loading" | "authenticated" | "guest" | "error";
  */
 export function SiteHeader() {
   const router = useRouter();
+  const pathname = usePathname();
 
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [username, setUsername] = useState<string | null>(null);
@@ -135,12 +136,26 @@ export function SiteHeader() {
           </span>
         )}
 
-        <span className="text-sm text-muted-foreground">Articles</span>
+        <Link
+          href="/articles"
+          aria-current={pathname.startsWith("/articles") ? "page" : undefined}
+          className={
+            pathname.startsWith("/articles")
+              ? "text-sm font-medium text-primary"
+              : "text-sm text-muted-foreground hover:text-primary"
+          }
+        >
+          Articles
+        </Link>
 
         <Link
           href="/topics"
-          aria-current="page"
-          className="text-sm font-medium text-primary"
+          aria-current={pathname.startsWith("/topics") ? "page" : undefined}
+          className={
+            pathname.startsWith("/topics")
+              ? "text-sm font-medium text-primary"
+              : "text-sm text-muted-foreground hover:text-primary"
+          }
         >
           Thèmes
         </Link>
