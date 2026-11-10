@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { ArrowLeft, Send } from "lucide-react";
+import { postWithCsrf } from "@/lib/api-client";
 import { z } from "zod";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
@@ -61,6 +62,10 @@ export function ArticleDetails({ articleId }: ArticleDetailsProps) {
   const [state, setState] = useState<LoadState>({
     status: "loading",
   });
+  const [commentContent, setCommentContent] = useState("");
+  const [submittingComment, setSubmittingComment] = useState(false);
+  const [commentError, setCommentError] = useState<string | null>(null);
+  const [refreshComments, setRefreshComments] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -110,7 +115,68 @@ export function ArticleDetails({ articleId }: ArticleDetailsProps) {
     void loadArticle();
 
     return () => controller.abort();
-  }, [articleId]);
+  }, [articleId, refreshComments]);
+
+  /**
+   * Publie un commentaire puis recharge les données
+   * de l'article pour afficher le commentaire enregistré.
+   */
+  async function handleCommentSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (submittingComment || state.status !== "success") {
+      return;
+    }
+
+    const content = commentContent.trim();
+
+    if (content.length < 1 || content.length > 2000) {
+      setCommentError(
+        "Le commentaire doit contenir entre 1 et 2 000 caractères.",
+      );
+      return;
+    }
+
+    setSubmittingComment(true);
+    setCommentError(null);
+
+    try {
+      const response = await postWithCsrf(
+        `/api/articles/${articleId}/comments`,
+        { content },
+      );
+
+      if (response.status === 401) {
+        throw new Error("Votre session a expiré. Veuillez vous reconnecter.");
+      }
+
+      if (response.status === 403) {
+        throw new Error("La vérification de sécurité a échoué.");
+      }
+
+      if (response.status === 404) {
+        throw new Error("Cet article n'existe plus.");
+      }
+
+      if (!response.ok) {
+        throw new Error("Impossible de publier le commentaire.");
+      }
+
+      // Réinitialisation uniquement après confirmation du serveur.
+      setCommentContent("");
+
+      // Recharge les commentaires depuis PostgreSQL.
+      setRefreshComments((current) => current + 1);
+    } catch (error) {
+      setCommentError(
+        error instanceof Error
+          ? error.message
+          : "Une erreur inattendue est survenue.",
+      );
+    } finally {
+      setSubmittingComment(false);
+    }
+  }
 
   if (state.status === "loading") {
     return (
@@ -218,29 +284,44 @@ export function ArticleDetails({ articleId }: ArticleDetailsProps) {
         )}
 
         {/* Zone de rédaction : activée à l'étape Commentaires */}
-        <div className="flex items-end gap-3 pt-2 sm:ml-12">
-          <label htmlFor="new-comment" className="sr-only">
-            Votre commentaire
-          </label>
+        {/* Création d'un commentaire */}
+        <div className="space-y-2 pt-2 sm:ml-12">
+          {commentError && (
+            <p role="alert" className="text-sm text-destructive">
+              {commentError}
+            </p>
+          )}
 
-          <textarea
-            id="new-comment"
-            placeholder="Écrivez ici votre commentaire"
-            rows={4}
-            disabled
-            title="La publication des commentaires sera disponible prochainement."
-            className="min-h-28 w-full resize-y rounded-lg border border-border bg-background p-3 text-sm outline-none placeholder:text-muted-foreground"
-          />
-
-          <button
-            type="button"
-            disabled
-            aria-label="Envoyer le commentaire"
-            title="Disponible prochainement"
-            className="mb-2 shrink-0 text-primary disabled:cursor-not-allowed"
+          <form
+            onSubmit={(event) => void handleCommentSubmit(event)}
+            className="flex items-end gap-3"
           >
-            <Send className="size-7" strokeWidth={2} aria-hidden="true" />
-          </button>
+            <label htmlFor="new-comment" className="sr-only">
+              Votre commentaire
+            </label>
+
+            <textarea
+              id="new-comment"
+              placeholder="Écrivez ici votre commentaire"
+              rows={4}
+              required
+              maxLength={2000}
+              value={commentContent}
+              onChange={(event) => setCommentContent(event.target.value)}
+              disabled={submittingComment}
+              className="min-h-28 min-w-0 flex-1 resize-y rounded-lg border border-border bg-background p-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+            />
+
+            <button
+              type="submit"
+              disabled={submittingComment || commentContent.trim().length === 0}
+              aria-label="Envoyer le commentaire"
+              title="Publier le commentaire"
+              className="mb-2 shrink-0 text-primary transition-colors hover:text-primary/80 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Send className="size-7" strokeWidth={2} aria-hidden="true" />
+            </button>
+          </form>
         </div>
       </section>
     </article>
