@@ -4,6 +4,7 @@ import { Prisma } from "../generated/prisma/client.js";
 import { authRepository } from "../repositories/auth.repository.js";
 import type { RegisterInput } from "../schemas/auth.schema.js";
 import type { LoginInput } from "../schemas/auth.schema.js";
+import type { UpdateProfileInput } from "../schemas/auth.schema.js";
 
 /**
  * Erreur métier signalant un conflit avec
@@ -23,6 +24,13 @@ export class InvalidCredentialsError extends Error {
   constructor() {
     super("Email ou mot de passe incorrect.");
     this.name = "InvalidCredentialsError";
+  }
+}
+
+export class ProfileSessionInvalidError extends Error {
+  constructor() {
+    super("Votre session n'est plus valide.");
+    this.name = "ProfileSessionInvalidError";
   }
 }
 
@@ -90,5 +98,50 @@ export const authService = {
    */
   getCurrentUser(userId: string) {
     return authRepository.findPublicById(userId);
+  },
+
+  /**
+   * Modifie les informations de l'utilisateur connecté.
+   * Une vérification du mot de passe actuel est obligatoire.
+   */
+  async updateProfile(userId: string, data: UpdateProfileInput) {
+    const user = await authRepository.findPrivateById(userId);
+
+    if (!user) {
+      throw new ProfileSessionInvalidError();
+    }
+
+    const passwordValid = await argon2.verify(
+      user.passwordHash,
+      data.currentPassword,
+    );
+
+    if (!passwordValid) {
+      throw new InvalidCredentialsError();
+    }
+
+    const passwordHash = data.newPassword
+      ? await argon2.hash(data.newPassword)
+      : undefined;
+
+    try {
+      return await authRepository.updateProfile(userId, {
+        username: data.username,
+        email: data.email,
+        ...(passwordHash ? { passwordHash } : {}),
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === "P2002") {
+          throw new UserAlreadyExistsError();
+        }
+
+        if (error.code === "P2025") {
+          throw new ProfileSessionInvalidError();
+        }
+      }
+
+      throw error;
+    }
   },
 };

@@ -6,12 +6,19 @@ export const subscriptionsRepository = {
    *
    * @param userId - Identifiant issu de la session.
    */
+
   findByUser(userId: string) {
     return prisma.subscription.findMany({
       where: { userId },
       select: {
         topicId: true,
         createdAt: true,
+        topic: {
+          select: {
+            name: true,
+            description: true,
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",

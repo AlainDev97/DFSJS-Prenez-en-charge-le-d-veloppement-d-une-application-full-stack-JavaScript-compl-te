@@ -239,7 +239,7 @@ Les vérifications ci-dessous documentent **le parcours initial de l'étape 4**.
 
 | Vérification                             | Résultat communiqué                                                                                                                             |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm --prefix backend run test`          | **63 tests réussis / 8 fichiers** (15 authentification, 17 abonnements, 31 articles/commentaires)                                               |
+| `npm --prefix backend run test`          | **80 tests réussis / 8 fichiers** (15 authentification, 17 abonnements, 31 articles/commentaires)                                               |
 | `npm --prefix backend run typecheck`     | **Réussi**, aucune erreur TypeScript                                                                                                            |
 | `npm --prefix frontend run lint`         | **Réussi**, aucune erreur ESLint                                                                                                                |
 | `npm run build`                          | **Réussi** : Next.js 16.4.3, génération Prisma Client 7.10.1 et compilation back-end                                                            |
@@ -428,6 +428,31 @@ Les 12 premiers tests automatisés ont été exécutés avec succès, puis 3 tes
 **Supervision de l'IA :** les premières propositions de code et de scénarios de test ont été fournies par ChatGPT. Le développeur a intégré et vérifié les solutions, fait ajuster les interfaces aux maquettes et exécuté les contrôles de qualité. Cette assistance ne remplace ni une revue du code ni sa compréhension pour la soutenance.
 
 **Conclusion :** les parcours principaux des articles et commentaires sont développés et la suite automatisée passe. La branche `feature/articles` doit encore faire l'objet de sa revue finale, de sa documentation actualisée, de son commit et de sa Pull Request avant fusion dans `main`.
+
+### 5.6 Étape 5.4 — Profil utilisateur
+
+**Objectif :** permettre à un utilisateur authentifié de consulter et modifier ses informations personnelles, ainsi que de gérer ses abonnements aux thèmes.
+
+**Fonctionnalités implémentées :**
+
+- Page `/profile` protégée par authentification, conforme aux maquettes Figma desktop et mobile.
+- Affichage du pseudo et de l'adresse email de l'utilisateur connecté.
+- Modification du pseudo et de l'email après vérification du mot de passe actuel.
+- Modification facultative du mot de passe avec hachage Argon2.
+- Affichage des thèmes suivis avec leur nom et leur description.
+- Désabonnement depuis le profil, avec actualisation immédiate de l'interface et persistance PostgreSQL.
+
+**Architecture et sécurité :** la modification du compte utilise `PATCH /api/auth/me`. L'identité de l'utilisateur provient de la session Express. Les données sont validées avec Zod, les requêtes de modification sont protégées par un jeton CSRF et les contraintes uniques Prisma empêchent les doublons de pseudo ou d'email.
+
+Le mot de passe actuel est vérifié avec Argon2. Le nouveau mot de passe est haché avant son enregistrement et aucun hash n'est retourné au navigateur.
+
+**Tests et validation :** 17 nouveaux tests automatisés ont été exécutés avec succès : 10 tests HTTP du profil et 7 tests du service métier. La suite complète compte désormais **80 tests réussis sur 10 fichiers**, le 11 novembre 2026.
+
+**Supervision de l'IA :** le code initial et les scénarios de tests ont été proposés avec l'assistance de ChatGPT. Le développeur a intégré les modifications, vérifié les fonctionnalités et exécuté les tests, en conservant la responsabilité de la validation finale.
+
+**Limites :** les tests automatisés utilisent des mocks et ne remplacent pas les tests E2E navigateur ou les tests d'intégration avec une base PostgreSQL dédiée. Aucune mesure chiffrée de couverture n'est encore disponible.
+
+**Conclusion :** la gestion du profil et des abonnements utilisateur est fonctionnelle. Le module est prêt pour la revue finale et la Pull Request après validation des contrôles de qualité.
 
 **Références du projet :**
 
