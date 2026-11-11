@@ -55,4 +55,41 @@ export const authRepository = {
       },
     });
   },
+
+  /**
+   * Récupère le hash uniquement pour vérifier
+   * l'identité avant une modification du profil.
+   */
+  findPrivateById(id: string) {
+    return prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        passwordHash: true,
+      },
+    });
+  },
+
+  /**
+   * Met à jour le compte et renvoie seulement
+   * les informations non sensibles.
+   */
+  updateProfile(
+    id: string,
+    data: {
+      username: string;
+      email: string;
+      passwordHash?: string;
+    },
+  ) {
+    return prisma.user.update({
+      where: { id },
+      data,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+      },
+    });
+  },
 };

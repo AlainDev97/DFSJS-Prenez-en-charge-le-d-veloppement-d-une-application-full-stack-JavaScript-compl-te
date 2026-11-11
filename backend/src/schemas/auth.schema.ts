@@ -32,5 +32,17 @@ export const loginSchema = z.strictObject({
   password: z.string().min(1).max(128),
 });
 
+/**
+ * Validation de la mise à jour du profil.
+ * Le mot de passe actuel confirme l'opération.
+ */
+export const updateProfileSchema = z.strictObject({
+  username: registerSchema.shape.username,
+  email: registerSchema.shape.email,
+  currentPassword: z.string().min(1).max(128),
+  newPassword: z.string().min(12).max(128).optional(),
+});
+
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;

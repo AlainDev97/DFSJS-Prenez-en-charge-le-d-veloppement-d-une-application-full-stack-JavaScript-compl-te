@@ -1,10 +1,11 @@
 import type { Request, Response } from "express";
 
 import { registerSchema } from "../schemas/auth.schema.js";
-import { loginSchema } from "../schemas/auth.schema.js";
+import { loginSchema, updateProfileSchema } from "../schemas/auth.schema.js";
 import {
   authService,
   UserAlreadyExistsError,
+  ProfileSessionInvalidError,
   InvalidCredentialsError,
 } from "../services/auth.service.js";
 
@@ -164,6 +165,59 @@ export const authController = {
 
       res.status(500).json({
         error: "Impossible de terminer la session.",
+      });
+    }
+  },
+
+  /**
+   * PATCH /api/auth/me
+   * Modification du profil de l'utilisateur connecté.
+   */
+  async updateProfile(req: Request, res: Response) {
+    const userId = req.session.userId;
+
+    if (!userId) {
+      res.status(401).json({ error: "Non authentifié." });
+      return;
+    }
+
+    const parsed = updateProfileSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      res.status(400).json({
+        error: "Informations du profil invalides.",
+        details: parsed.error.flatten().fieldErrors,
+      });
+      return;
+    }
+
+    try {
+      const user = await authService.updateProfile(userId, parsed.data);
+
+      res.status(200).json({
+        message: "Profil mis à jour avec succès.",
+        data: user,
+      });
+    } catch (error) {
+      if (
+        error instanceof InvalidCredentialsError ||
+        error instanceof ProfileSessionInvalidError
+      ) {
+        res.status(401).json({
+          error: "Mot de passe incorrect ou session invalide.",
+        });
+        return;
+      }
+
+      if (error instanceof UserAlreadyExistsError) {
+        res.status(409).json({ error: error.message });
+        return;
+      }
+
+      console.error("Erreur de modification du profil :", error);
+
+      res.status(500).json({
+        error: "Impossible de modifier le profil.",
       });
     }
   },

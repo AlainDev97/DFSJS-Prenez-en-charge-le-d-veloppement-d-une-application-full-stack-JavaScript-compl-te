@@ -6,7 +6,7 @@ const csrfResponseSchema = z.object({
   csrfToken: z.string().regex(/^[0-9a-f]{64}$/),
 });
 
-type MutationMethod = "POST" | "DELETE";
+type MutationMethod = "POST" | "PATCH" | "DELETE";
 
 /**
  * Exécute une mutation HTTP protégée par un jeton CSRF.
@@ -64,4 +64,14 @@ export function postWithCsrf(
  */
 export function deleteWithCsrf(endpoint: string): Promise<Response> {
   return requestWithCsrf(endpoint, "DELETE");
+}
+
+/**
+ * Effectue une mise à jour protégée par CSRF.
+ */
+export function patchWithCsrf(
+  endpoint: string,
+  data: unknown,
+): Promise<Response> {
+  return requestWithCsrf(endpoint, "PATCH", data);
 }

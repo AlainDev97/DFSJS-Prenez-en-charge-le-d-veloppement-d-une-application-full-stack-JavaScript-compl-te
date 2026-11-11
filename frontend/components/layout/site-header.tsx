@@ -159,6 +159,20 @@ export function SiteHeader() {
         >
           Thèmes
         </Link>
+
+        {status === "authenticated" && (
+          <Link
+            href="/profile"
+            aria-current={pathname === "/profile" ? "page" : undefined}
+            className={
+              pathname === "/profile"
+                ? "text-sm font-medium text-primary md:hidden"
+                : "text-sm text-muted-foreground hover:text-primary md:hidden"
+            }
+          >
+            Profil
+          </Link>
+        )}
       </>
     );
   }
@@ -185,10 +199,19 @@ export function SiteHeader() {
           {renderNavigation()}
 
           {status === "authenticated" && (
-            <UserRound
-              aria-label={`Connecté : ${username}`}
-              className="size-7 rounded-full bg-muted p-1"
-            />
+            <Link
+              href="/profile"
+              aria-label={`Accéder au profil de ${username}`}
+              aria-current={pathname === "/profile" ? "page" : undefined}
+              className={
+                "rounded-full border p-1 transition-colors " +
+                (pathname === "/profile"
+                  ? "border-primary text-primary"
+                  : "border-border hover:border-primary hover:text-primary")
+              }
+            >
+              <UserRound className="size-6" aria-hidden="true" />
+            </Link>
           )}
         </nav>
 

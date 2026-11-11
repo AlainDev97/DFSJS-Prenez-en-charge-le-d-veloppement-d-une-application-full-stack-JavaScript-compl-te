@@ -12,10 +12,12 @@ export const authRouter = Router();
 
 authRouter.get("/csrf", getCsrfToken);
 
+authRouter.get("/me", requireAuth, authController.me);
+
 authRouter.post("/register", registerLimiter, authController.register);
 
 authRouter.post("/login", loginLimiter, authController.login);
 
-authRouter.get("/me", requireAuth, authController.me);
-
 authRouter.post("/logout", requireAuth, authController.logout);
+
+authRouter.patch("/me", requireAuth, authController.updateProfile);
