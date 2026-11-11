@@ -34,6 +34,7 @@ export function SiteHeader() {
   const [username, setUsername] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   /**
    * Vérifie la session existante auprès de l'API Express.
@@ -84,6 +85,30 @@ export function SiteHeader() {
   }, []);
 
   /**
+   * Empêche le défilement de la page lorsque le menu est ouvert
+   * et permet de fermer le panneau avec Échap.
+   */
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMobileMenuOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileMenuOpen]);
+
+  /**
    * Détruit la session et redirige vers la connexion.
    */
   async function handleLogout() {
@@ -101,6 +126,7 @@ export function SiteHeader() {
 
       setUsername(null);
       setStatus("guest");
+      setMobileMenuOpen(false);
       router.replace("/login");
       router.refresh();
     } catch {
@@ -216,25 +242,120 @@ export function SiteHeader() {
         </nav>
 
         {/* Navigation mobile */}
-        <details className="relative md:hidden">
-          <summary className="cursor-pointer list-none rounded-lg p-2 hover:bg-muted">
-            <Menu className="size-6" aria-hidden="true" />
-            <span className="sr-only">Ouvrir le menu</span>
-          </summary>
-
-          <nav
-            aria-label="Navigation mobile"
-            className="absolute right-0 top-full z-20 mt-3 flex w-44 flex-col gap-4 rounded-lg border bg-background p-5 shadow-lg"
+        <div className="md:hidden">
+          {/* Bouton hamburger */}
+          <button
+            type="button"
+            aria-label={mobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
+            onClick={() => setMobileMenuOpen((current) => !current)}
+            className="rounded-md p-2 hover:bg-muted"
           >
-            {status === "authenticated" && (
-              <p className="text-xs text-muted-foreground">
-                Connecté : {username}
-              </p>
-            )}
+            <Menu className="size-7" aria-hidden="true" />
+          </button>
 
-            {renderNavigation()}
-          </nav>
-        </details>
+          {mobileMenuOpen && (
+            <>
+              {/* Fond blanc transparent, comme sur la maquette */}
+              <button
+                type="button"
+                aria-label="Fermer le menu mobile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="fixed inset-0 z-40 bg-background/70 md:hidden"
+              />
+
+              {/* Panneau latéral */}
+              <aside
+                id="mobile-navigation"
+                aria-label="Menu de navigation mobile"
+                className="fixed inset-y-0 right-0 z-50 flex h-dvh w-[58vw] min-w-52 max-w-72 flex-col border-l border-foreground/60 bg-background px-4 pb-5 pt-12 shadow-sm md:hidden"
+              >
+                {/* Liens du haut */}
+                <nav
+                  aria-label="Navigation principale mobile"
+                  className="flex flex-col items-center gap-3 text-center"
+                >
+                  {status === "authenticated" ? (
+                    <button
+                      type="button"
+                      onClick={() => void handleLogout()}
+                      disabled={isLoggingOut}
+                      className="mb-1 text-sm font-semibold text-destructive hover:underline disabled:opacity-50"
+                    >
+                      {isLoggingOut ? "Déconnexion..." : "Se déconnecter"}
+                    </button>
+                  ) : status === "guest" ? (
+                    <Link
+                      href="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="mb-1 text-sm font-semibold text-primary"
+                    >
+                      Se connecter
+                    </Link>
+                  ) : (
+                    <span className="mb-1 text-sm text-muted-foreground">
+                      Vérification...
+                    </span>
+                  )}
+
+                  <Link
+                    href="/articles"
+                    onClick={() => setMobileMenuOpen(false)}
+                    aria-current={
+                      pathname.startsWith("/articles") ? "page" : undefined
+                    }
+                    className="text-xl text-foreground hover:text-primary"
+                  >
+                    Articles
+                  </Link>
+
+                  <Link
+                    href="/topics"
+                    onClick={() => setMobileMenuOpen(false)}
+                    aria-current={
+                      pathname.startsWith("/topics") ? "page" : undefined
+                    }
+                    className="text-xl text-foreground hover:text-primary"
+                  >
+                    Thèmes
+                  </Link>
+                </nav>
+
+                {logoutError && (
+                  <p
+                    role="alert"
+                    className="mt-4 text-center text-xs text-destructive"
+                  >
+                    {logoutError}
+                  </p>
+                )}
+
+                {/* Profil positionné en bas à droite */}
+                {status === "authenticated" && (
+                  <Link
+                    href="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    aria-label={`Accéder au profil de ${username}`}
+                    aria-current={pathname === "/profile" ? "page" : undefined}
+                    className={
+                      "mt-auto ml-auto flex size-12 items-center justify-center rounded-full transition-colors " +
+                      (pathname === "/profile"
+                        ? "bg-primary/15 text-primary"
+                        : "bg-muted text-foreground hover:text-primary")
+                    }
+                  >
+                    <UserRound
+                      className="size-8"
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                    />
+                  </Link>
+                )}
+              </aside>
+            </>
+          )}
+        </div>
       </div>
 
       {logoutError && (
