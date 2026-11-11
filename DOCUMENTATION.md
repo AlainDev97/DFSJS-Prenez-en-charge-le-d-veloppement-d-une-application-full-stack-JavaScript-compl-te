@@ -2,13 +2,13 @@
 
 **Projet :** P5 — OpenClassrooms, parcours Lead Developer JavaScript (RNCP 7)  
 **Auteur :** Alain Bonneau
-**Version du document :** 0.4.0 — articles, commentaires et validation des services  
+**Version du document :** 0.5.0 — profil utilisateur, abonnements et navigation responsive  
 **Mise à jour :** 11/11/2026  
-**Branches de référence :** `main` (authentification et abonnements fusionnés) ; `feature/articles` (en cours, non fusionnée)  
+**Branches de référence :** `main` (authentification, abonnements, articles et commentaires intégrés) ; `feature/user-profile` (développement local, avant la fusion)  
 **Commit historique de l'étape 4 :** `29a92b2`  
 **État :** documentation évolutive de l'étape 4 et des fonctionnalités implémentées de l'étape 5
 
-> **Périmètre de ce rapport :** distinguer les fonctionnalités réellement développées de celles prévues. Les contrôles manuels, les **63 tests automatisés réussis le 11/11/2026** et les commandes de compilation signalés comme validés proviennent des sorties communiquées par le développeur. Aucun taux de couverture ni résultat de mesure de performance n'est présumé. Les descriptions historiques de l'étape 4 sont conservées et distinguées de l'état actuel.
+> **Périmètre de ce rapport :** distinguer les fonctionnalités réellement développées de celles prévues. Les contrôles manuels, les **80 tests automatisés réussis le 11/11/2026** et les commandes de compilation signalés comme validés proviennent des sorties communiquées par le développeur. Aucun taux de couverture ni résultat de mesure de performance n'est présumé. Les descriptions historiques de l'étape 4 sont conservées et distinguées de l'état actuel.
 
 ## Sommaire
 
@@ -37,18 +37,18 @@ L'**étape 4** vise une preuve de fonctionnement limitée mais complète : affic
 
 ### 1.2 Périmètre fonctionnel et état d'avancement
 
-| Fonctionnalité                  | Description                                                                    | État au 11/11/2026                                                                             |
-| ------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| Consultation des thèmes         | Lecture de `Topic` depuis PostgreSQL, affichage sur `/topics`                  | **Implémentée et vérifiée** ; accès réservé aux utilisateurs connectés                         |
-| Filtrage des thèmes dans l'API  | Paramètre facultatif `search` sur `GET /api/topics`                            | **Implémenté et vérifié manuellement**                                                         |
-| Maquette de la page Thèmes      | Cartes responsive, logo MDD officiel, header et menu mobile                    | **Intégrée pour les thèmes et articles** ; profil utilisateur à développer                     |
-| Inscription et connexion        | Validation Zod, hachage Argon2, sessions PostgreSQL et cookies HttpOnly        | **Implémentées et vérifiées**                                                                  |
-| Déconnexion et contrôle d'accès | Destruction de session, `GET /api/auth/me`, `requireAuth`, CSRF, rate limiting | **Implémentés et vérifiés**                                                                    |
-| Abonnement / désabonnement      | Relation utilisateur–thème, boutons « S'abonner » / « Déjà abonné »            | **Implémentés et vérifiés** ; persistance contrôlée dans DBeaver                               |
-| Articles                        | Liste et tri chronologique, publication, consultation détaillée                | **Implémentés** ; validation API et métier, essais manuels principaux                          |
-| Commentaires                    | Affichage par article et publication par l’utilisateur connecté                | **Implémentés** ; validation API et métier, publication à conserver dans les preuves manuelles |
-| Fil d'actualité personnalisé    | Articles correspondant aux thèmes suivis                                       | À développer                                                                                   |
-| Profil utilisateur              | Affichage et gestion du profil                                                 | À développer                                                                                   |
+| Fonctionnalité                     | Description                                                                                             | État au 11/11/2026                                                                             |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Consultation des thèmes            | Lecture de `Topic` depuis PostgreSQL, affichage sur `/topics`                                           | **Implémentée et vérifiée** ; accès réservé aux utilisateurs connectés                         |
+| Filtrage des thèmes dans l'API     | Paramètre facultatif `search` sur `GET /api/topics`                                                     | **Implémenté et vérifié manuellement**                                                         |
+| Interface et navigation responsive | Cartes, logo officiel, header et panneau latéral mobile conforme à la maquette                          | **Implémentés**, vérifications desktop et mobile rapportées comme réussies                     |
+| Inscription et connexion           | Validation Zod, hachage Argon2, sessions PostgreSQL et cookies HttpOnly                                 | **Implémentées et vérifiées**                                                                  |
+| Déconnexion et contrôle d'accès    | Destruction de session, `GET /api/auth/me`, `requireAuth`, CSRF, rate limiting                          | **Implémentés et vérifiés**                                                                    |
+| Abonnement / désabonnement         | Relation utilisateur–thème, boutons « S'abonner » / « Déjà abonné »                                     | **Implémentés et vérifiés** ; persistance contrôlée dans DBeaver                               |
+| Articles                           | Liste et tri chronologique, publication, consultation détaillée                                         | **Implémentés** ; validation API et métier, essais manuels principaux                          |
+| Commentaires                       | Affichage par article et publication par l’utilisateur connecté                                         | **Implémentés** ; validation API et métier, publication à conserver dans les preuves manuelles |
+| Fil d'actualité personnalisé       | Articles correspondant aux thèmes suivis                                                                | À développer                                                                                   |
+| Profil utilisateur                 | Consultation et mise à jour du compte, changement de mot de passe, affichage et gestion des abonnements | **Implémenté et vérifié manuellement** ; 17 tests automatisés dédiés réussis                   |
 
 **Note :** le schéma de base de données contient déjà les entités nécessaires aux fonctionnalités futures et des données de démonstration. Cela ne signifie pas que leurs interfaces ou leurs endpoints métier sont disponibles.
 
@@ -58,7 +58,7 @@ L'**étape 4** vise une preuve de fonctionnement limitée mais complète : affic
 
 ### 2.1 Schéma global de l'architecture
 
-Le schéma ci-dessous retrace **le cas end-to-end initial de l'étape 4**. Depuis, la route `/topics` a été placée dans un groupe Next.js protégé et les accès aux thèmes sont soumis à authentification. Les abonnements, les articles et les commentaires passent par les mêmes couches, avec une session utilisateur et un jeton CSRF pour les mutations.
+Le schéma ci-dessous retrace **le cas end-to-end initial de l'étape 4**. Depuis, la route `/topics` a été placée dans un groupe Next.js protégé et les accès aux thèmes sont soumis à authentification. Les abonnements, les articles, les commentaires et la modification du profil passent par les mêmes couches, avec une session utilisateur et un jeton CSRF pour les mutations.
 
 ```mermaid
 flowchart TD
@@ -78,7 +78,7 @@ flowchart TD
     F -->|JSON HTTP| D
 ```
 
-Depuis, les pages `/articles`, `/articles/new` et `/articles/[id]` ont également été ajoutées au groupe protégé. La création d’un article ou d’un commentaire suit la chaîne navigateur → Express (`requireAuth`, CSRF et validation Zod) → Service → Repository → Prisma/PostgreSQL.
+Depuis, les pages `/articles`, `/articles/new`, `/articles/[id]` et `/profile` ont également été ajoutées au groupe protégé. La création d’un article ou d’un commentaire suit la chaîne navigateur → Express (`requireAuth`, CSRF et validation Zod) → Service → Repository → Prisma/PostgreSQL.
 
 L'application est organisée en **monorepo** :
 
@@ -87,11 +87,13 @@ mdd/
 ├── frontend/
 │   ├── app/(protected)/topics/page.tsx
 │   ├── app/(protected)/articles/{page.tsx,new/page.tsx,[id]/page.tsx}
+│   ├── app/(protected)/profile/page.tsx
 │   ├── app/(protected)/layout.tsx
 │   ├── app/login/page.tsx et app/register/page.tsx
 │   ├── components/layout/site-header.tsx
 │   ├── features/topics/components/topics-list.tsx
 │   ├── features/articles/components/{articles-list,create-article-form,article-details}.tsx
+│   ├── features/profile/components/profile-page.tsx
 │   ├── features/auth/components/
 │   ├── lib/api-client.ts
 │   └── app/globals.css
@@ -115,10 +117,10 @@ mdd/
 
 **Responsabilités :**
 
-- **Client Component React** : déclenche les requêtes, affiche thèmes, abonnements, articles et commentaires, et gère les états de chargement et d'erreur.
+- **Client Component React** : déclenche les requêtes, affiche thèmes, abonnements, articles, commentaires et profil ; gère les états de chargement, d'erreur et de sauvegarde.
 - **Next.js App Router** : pages d'inscription et de connexion ; groupe `(protected)` qui vérifie la session avant l'accès aux pages privées.
 - **Express / Router / Controller** : expose les endpoints HTTP, applique `requireAuth`, la protection CSRF et les limites de requêtes, puis valide les entrées avec Zod.
-- **Service** : porte la logique métier (authentification, abonnements, création/consultation des articles et commentaires) et traduit les cas d'erreur.
+- **Service** : porte la logique métier (authentification, abonnements, articles, commentaires et mise à jour du profil) et traduit les cas d'erreur.
 - **Repository** : centralise les opérations Prisma, les requêtes et les champs sélectionnés.
 - **Prisma / PostgreSQL** : fournit l'accès typé et persistant aux utilisateurs, thèmes, abonnements, articles, commentaires et sessions (ces dernières via `connect-pg-simple`).
 
@@ -135,9 +137,9 @@ mdd/
 | Tailwind CSS 4                          | Styles / responsive                                        | Mise en forme par utilitaires, adaptation aux maquettes desktop et mobile.                                                                                                                                         | [Tailwind CSS](https://tailwindcss.com/docs)                                                       |
 | Helmet et CORS                          | Configuration HTTP                                         | En-têtes de protection et restriction des origines navigateur autorisées. Ne remplacent pas une authentification.                                                                                                  | [Helmet](https://helmetjs.github.io/), [CORS](https://github.com/expressjs/cors)                   |
 | Argon2                                  | Hachage de mots de passe                                   | Utilisé pour les comptes fictifs du seed et pour les inscriptions ; vérification des mots de passe à la connexion.                                                                                                 | [argon2](https://www.npmjs.com/package/argon2)                                                     |
-| GitHub Flow                             | Travail collaboratif                                       | Branches de fonctionnalités, Pull Requests et revue avant fusion ; authentification et abonnements fusionnés dans `main` ; articles et commentaires sur `feature/articles`.                                        | [GitHub Flow](https://docs.github.com/en/get-started/using-github/github-flow)                     |
+| GitHub Flow                             | Travail collaboratif                                       | Branches de fonctionnalités, Pull Requests et revue avant fusion ; articles et commentaires intégrés à `main`, profil sur `feature/user-profile` avant revue et fusion.                                            | [GitHub Flow](https://docs.github.com/en/get-started/using-github/github-flow)                     |
 | `express-session` + `connect-pg-simple` | Sessions utilisateurs                                      | Identifiant en cookie HttpOnly ; contenu de session stocké dans PostgreSQL plutôt que dans le navigateur.                                                                                                          | [Express Session](https://github.com/expressjs/session)                                            |
-| Middleware CSRF et `express-rate-limit` | Sécurité des mutations et des endpoints d'authentification | Jeton synchroniseur associé à la session, contrôle sur POST/DELETE et limitation des tentatives de connexion/inscription.                                                                                          | [express-rate-limit](https://express-rate-limit.mintlify.app/)                                     |
+| Middleware CSRF et `express-rate-limit` | Sécurité des mutations et des endpoints d'authentification | Jeton synchroniseur associé à la session, contrôle sur POST/PATCH/DELETE et limitation des tentatives de connexion/inscription.                                                                                    | [express-rate-limit](https://express-rate-limit.mintlify.app/)                                     |
 | Vitest + Supertest                      | Tests automatisés du back-end                              | Vérification des réponses HTTP et des règles métier avec mocks ; aucune écriture sur les comptes réels durant ces tests.                                                                                           | [Vitest](https://vitest.dev/), [Supertest](https://github.com/ladjs/supertest)                     |
 
 **Choix Express plutôt que Server Actions :** l'énoncé recommande un Client Component communiquant avec une Server Action. Le projet utilise, à la place, un Client Component appelant une **API REST Express séparée**. La chaîne complète front-end → back-end → base est ainsi effectivement traversée. Cet écart à la recommandation doit être **présenté et validé avec le mentor** pour vérifier qu'il satisfait l'évaluation ; il n'est pas assimilé à une Server Action.
@@ -146,26 +148,27 @@ mdd/
 
 #### Endpoints disponibles
 
-| Endpoint                      | Méthode | Fonction                                                                      | État        |
-| ----------------------------- | ------- | ----------------------------------------------------------------------------- | ----------- |
-| `/api/health`                 | GET     | Vérification du service Express                                               | Fonctionnel |
-| `/api/health/db`              | GET     | Vérification de la connexion Prisma/PostgreSQL par comptage des thèmes        | Fonctionnel |
-| `/api/topics`                 | GET     | Liste des thèmes, tri alphabétique, maximum 50 résultats ; session requise    | Fonctionnel |
-| `/api/topics?search=react`    | GET     | Filtrage partiel du nom, insensible à la casse ; session requise              | Fonctionnel |
-| `/api/auth/csrf`              | GET     | Jeton CSRF associé à la session                                               | Fonctionnel |
-| `/api/auth/register`          | POST    | Inscription, validation et hachage Argon2 ; CSRF requis                       | Fonctionnel |
-| `/api/auth/login`             | POST    | Vérification des identifiants et création de session ; CSRF requis            | Fonctionnel |
-| `/api/auth/me`                | GET     | Profil de l'utilisateur connecté                                              | Fonctionnel |
-| `/api/auth/logout`            | POST    | Invalidation de session ; CSRF requis                                         | Fonctionnel |
-| `/api/subscriptions`          | GET     | Liste des abonnements de l'utilisateur connecté                               | Fonctionnel |
-| `/api/subscriptions`          | POST    | Abonnement à un thème ; session et CSRF requis                                | Fonctionnel |
-| `/api/subscriptions/:topicId` | DELETE  | Désabonnement ; session et CSRF requis                                        | Fonctionnel |
-| `/api/articles?sort=newest`   | GET     | Liste de 50 articles maximum, tri du plus récent au plus ancien (ou `oldest`) | Fonctionnel |
-| `/api/articles/:id`           | GET     | Détail intégral, auteur, thème et commentaires                                | Fonctionnel |
-| `/api/articles`               | POST    | Création d'un article par l'utilisateur connecté ; CSRF requis                | Fonctionnel |
-| `/api/articles/:id/comments`  | POST    | Publication d'un commentaire ; session et CSRF requis                         | Fonctionnel |
+| Endpoint                      | Méthode | Fonction                                                                                                            | État        |
+| ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------- | ----------- |
+| `/api/health`                 | GET     | Vérification du service Express                                                                                     | Fonctionnel |
+| `/api/health/db`              | GET     | Vérification de la connexion Prisma/PostgreSQL par comptage des thèmes                                              | Fonctionnel |
+| `/api/topics`                 | GET     | Liste des thèmes, tri alphabétique, maximum 50 résultats ; session requise                                          | Fonctionnel |
+| `/api/topics?search=react`    | GET     | Filtrage partiel du nom, insensible à la casse ; session requise                                                    | Fonctionnel |
+| `/api/auth/csrf`              | GET     | Jeton CSRF associé à la session                                                                                     | Fonctionnel |
+| `/api/auth/register`          | POST    | Inscription, validation et hachage Argon2 ; CSRF requis                                                             | Fonctionnel |
+| `/api/auth/login`             | POST    | Vérification des identifiants et création de session ; CSRF requis                                                  | Fonctionnel |
+| `/api/auth/me`                | GET     | Informations de l'utilisateur connecté                                                                              | Fonctionnel |
+| `/api/auth/me`                | PATCH   | Modification du pseudo, de l'email et facultativement du mot de passe ; session, mot de passe actuel et CSRF requis | Fonctionnel |
+| `/api/auth/logout`            | POST    | Invalidation de session ; CSRF requis                                                                               | Fonctionnel |
+| `/api/subscriptions`          | GET     | Liste des abonnements avec nom et description des thèmes suivis                                                     | Fonctionnel |
+| `/api/subscriptions`          | POST    | Abonnement à un thème ; session et CSRF requis                                                                      | Fonctionnel |
+| `/api/subscriptions/:topicId` | DELETE  | Désabonnement ; session et CSRF requis                                                                              | Fonctionnel |
+| `/api/articles?sort=newest`   | GET     | Liste de 50 articles maximum, tri du plus récent au plus ancien (ou `oldest`)                                       | Fonctionnel |
+| `/api/articles/:id`           | GET     | Détail intégral, auteur, thème et commentaires                                                                      | Fonctionnel |
+| `/api/articles`               | POST    | Création d'un article par l'utilisateur connecté ; CSRF requis                                                      | Fonctionnel |
+| `/api/articles/:id/comments`  | POST    | Publication d'un commentaire ; session et CSRF requis                                                               | Fonctionnel |
 
-Les routes `/api/topics`, `/api/subscriptions` et `/api/articles` exigent une session authentifiée. Le `userId` utilisé pour les abonnements provient de la session Express et non du corps HTTP. Les mutations sont contrôlées par la protection CSRF globale. Les auteurs des articles et des commentaires sont déterminés à partir de la session, jamais depuis un `authorId` fourni par le client.
+Les routes `/api/topics`, `/api/subscriptions` et `/api/articles` exigent une session authentifiée. Le `userId` utilisé pour les abonnements provient de la session Express et non du corps HTTP. Les mutations sont contrôlées par la protection CSRF globale. Les auteurs des articles et des commentaires sont déterminés à partir de la session, jamais depuis un `authorId` fourni par le client. La modification du profil utilise également l’identifiant de session et exige la vérification du mot de passe actuel.
 
 Pour `GET /api/topics`, le paramètre `search` est facultatif, une chaîne après suppression des espaces superflus, limitée à **100 caractères**. Le contrôleur utilise `z.strictObject()` : les paramètres inconnus sont rejetés avec **HTTP 400**. L'accès aux données est limité à `id`, `name` et `description`, dans l'ordre alphabétique des noms.
 
@@ -189,6 +192,8 @@ Pour une recherche ne correspondant à aucun thème, la réponse attendue est `{
 
 **Commentaires :** `POST /api/articles/:id/comments` accepte un contenu non vide de 2 000 caractères au maximum. Un UUID invalide reçoit `400` ; un article absent reçoit `404`. Les commentaires sont inclus dans le détail de l'article, avec le pseudo de leur auteur, triés par date de création.
 
+**Profil :** `PATCH /api/auth/me` utilise `z.strictObject()` pour contrôler le pseudo, l’email, le mot de passe actuel et, si renseigné, le nouveau mot de passe (12 à 128 caractères). Argon2 vérifie le mot de passe actuel et hache le nouveau. Une erreur de données reçoit `400`, une session ou un mot de passe invalide `401`, et un pseudo ou email déjà utilisé `409`. Le hash n’est jamais renvoyé au client.
+
 #### Modèle relationnel
 
 Le schéma Prisma définit cinq modèles métier :
@@ -211,7 +216,7 @@ erDiagram
     Post ||--o{ Comment : recoit
 ```
 
-La migration initiale est versionnée dans `backend/prisma/migrations/`. Le seed `backend/prisma/seed.ts` crée deux utilisateurs fictifs, quatre thèmes, quatre abonnements, deux articles et deux commentaires. Les données ont été vérifiées dans DBeaver. Les requêtes `upsert` évitent de dupliquer ces données lors d'une relance. **Aucune nouvelle migration Prisma n'a été nécessaire pour les abonnements, les articles ou les commentaires**, car les modèles `Subscription`, `Post` et `Comment` existaient déjà.
+La migration initiale est versionnée dans `backend/prisma/migrations/`. Le seed `backend/prisma/seed.ts` crée deux utilisateurs fictifs, quatre thèmes, quatre abonnements, deux articles et deux commentaires. Les données ont été vérifiées dans DBeaver. Les requêtes `upsert` évitent de dupliquer ces données lors d'une relance. **Aucune nouvelle migration Prisma n'a été nécessaire pour les abonnements, les articles, les commentaires ou la modification du profil**, car les modèles `Subscription`, `Post` et `Comment` existaient déjà.
 
 ---
 
@@ -239,7 +244,7 @@ Les vérifications ci-dessous documentent **le parcours initial de l'étape 4**.
 
 | Vérification                             | Résultat communiqué                                                                                                                             |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm --prefix backend run test`          | **80 tests réussis / 8 fichiers** (15 authentification, 17 abonnements, 31 articles/commentaires)                                               |
+| `npm --prefix backend run test`          | **80 tests réussis / 10 fichiers** (15 authentification, 17 abonnements, 31 articles/commentaires, 17 profil)                                   |
 | `npm --prefix backend run typecheck`     | **Réussi**, aucune erreur TypeScript                                                                                                            |
 | `npm --prefix frontend run lint`         | **Réussi**, aucune erreur ESLint                                                                                                                |
 | `npm run build`                          | **Réussi** : Next.js 16.4.3, génération Prisma Client 7.10.1 et compilation back-end                                                            |
@@ -247,10 +252,13 @@ Les vérifications ci-dessous documentent **le parcours initial de l'étape 4**.
 | Accès à `/topics` sans session           | **Redirection vers `/login` confirmée** ; API protégée                                                                                          |
 | Liste, création et détail des articles   | **Parcours principaux validés manuellement** ; le scénario manuel « UUID valide d'article inexistant » reste à confirmer                        |
 | Publication de commentaires              | Fonctionnalité implémentée ; contrôles TypeScript, lint, build et tests HTTP/métier réussis ; conserver une preuve manuelle du parcours complet |
+| Page `/profile` et abonnements affichés  | **Fonctionnement manuel confirmé** ; données du compte, cartes des thèmes suivis, suppression des abonnements et responsive                     |
+| Tests du profil                          | **17 nouveaux tests réussis** (10 tests HTTP, 7 tests métier dont vérification réelle Argon2)                                                   |
+| Panneau latéral mobile                   | **Adapté à la maquette Figma**, validation visuelle et responsive signalées                                                                     |
 | Tests HTTP articles/commentaires         | **20 nouveaux tests réussis** avec sessions et services simulés                                                                                 |
 | Tests des services articles/commentaires | **11 nouveaux tests réussis** (8 Articles, 3 Commentaires)                                                                                      |
 
-Les tests Vitest et Supertest exécutés comprennent des tests HTTP avec services simulés et des tests du service métier avec repository simulé. Les tests automatisés ne réalisent pas d'écritures réelles dans PostgreSQL. Le contrôle manuel dans DBeaver pour les abonnements complète cette validation sans constituer un test d'intégration automatisé avec base de données.
+Les tests Vitest et Supertest exécutés comprennent des tests HTTP avec services simulés et des tests du service métier avec repository simulé, y compris pour la mise à jour du profil. Les tests automatisés ne réalisent pas d'écritures réelles dans PostgreSQL. Le contrôle manuel dans DBeaver pour les abonnements complète cette validation sans constituer un test d'intégration automatisé avec base de données.
 
 **Travaux de tests restant à mener :** tests de composants React (React Testing Library), tests E2E (Playwright), tests d'intégration sur une base PostgreSQL dédiée, scénarios de panne réseau, mesure de couverture. **Aucun taux de couverture n'est annoncé à ce stade.**
 
@@ -264,7 +272,7 @@ Aucun score Lighthouse ni mesure chiffrée de latence ou de charge n'a encore é
 - `AbortController` annule la récupération côté navigateur lorsque le composant est démonté.
 - Les ressources Next.js et Express se compilent séparément et peuvent être contrôlées indépendamment.
 
-**Limites / travaux ultérieurs :** mesurer les performances et l'accessibilité, étudier une pagination si le nombre de thèmes augmente, évaluer les besoins de cache et conserver les résultats des audits dans cette section. L'avertissement Next.js sur la présence de plusieurs fichiers `package-lock.json` n'a pas bloqué le build du 09/11/2026 ; sa configuration pourra être clarifiée ultérieurement.
+**Limites / travaux ultérieurs :** mesurer les performances et l'accessibilité, étudier une pagination si le nombre de thèmes augmente, évaluer les besoins de cache et conserver les résultats des audits dans cette section. L'avertissement Next.js sur la présence de plusieurs fichiers `package-lock.json` n'a pas bloqué les builds précédents ; sa configuration pourra être clarifiée ultérieurement.
 
 ### 3.3 Revue technique — première fonctionnalité end-to-end
 
@@ -309,25 +317,29 @@ R. Se connecter, ouvrir `/articles`, cliquer sur « Créer un article », rensei
 **Q. Comment commenter un article ?**  
 R. Depuis sa page de détail, saisir un commentaire puis utiliser le bouton d’envoi. Le commentaire est lié à l’utilisateur connecté et à l’article consulté.
 
+**Q. Comment modifier mon profil et retrouver mes abonnements ?**  
+R. Après connexion, utiliser l’icône Profil (en bas du panneau mobile ou dans la barre desktop), puis accéder à `/profile`. Le pseudo et l’email sont préremplis ; la sauvegarde nécessite le mot de passe actuel. Le changement de mot de passe est facultatif. En bas de la page, les thèmes suivis sont affichés avec un bouton « Se désabonner ».
+
 ### 4.2 Supervision et tâches déléguées à l'IA
 
 Pour répondre à l'exigence de posture Lead Developer, une tâche circonscrite a été confiée à **ChatGPT**, puis examinée et corrigée par le développeur responsable.
 
-| Tâche confiée                                                     | Attendus                                                                                                 | Revue humaine                                                                                       | Décision                                                                   |
-| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Proposition de la page Next.js `/topics` et d'un Client Component | Appeler Express, afficher des données PostgreSQL, gérer chargement/erreur/vide, être responsive          | Test dans le navigateur et comparaison aux maquettes transmises                                     | Proposition initiale corrigée avant conservation                           |
-| Mise en forme de la page Thèmes                                   | Header MDD, deux colonnes desktop, une mobile, cartes et boutons conformes aux intentions de la maquette | Signalement de la non-conformité visuelle initiale                                                  | Adaptation du composant et retrait de la recherche visible                 |
-| Analyse du cas d'API `search[]=React`                             | Rejeter les paramètres imprévus                                                                          | Reproduction de l'anomalie et vérification après modification                                       | Adoption de `z.strictObject()`                                             |
-| Rédaction de la revue et de la documentation                      | Traces des décisions, validations et limites                                                             | À vérifier par le responsable avant le dépôt final                                                  | Documents versionnés ; export PDF restant à effectuer                      |
-| Proposition de l'authentification et de ses tests                 | Inscription, connexion, sessions, déconnexion, CSRF, rate limiting et code testable                      | Intégration, contrôles manuels et exécution de 15 tests par le développeur                          | Fonctionnalité validée ; protection des routes privées ajoutée             |
-| Proposition des abonnements et de leurs tests                     | Création/suppression, contrôle des doublons, mise à jour du front et protection de session               | Vérifications fonctionnelles, persistance dans DBeaver et exécution de 17 nouveaux tests            | Fonctionnalité validée ; intégrée à `main`                                 |
-| Proposition des articles, commentaires et tests                   | Liste/tri, publication, détail, commentaires, contrôles de session et CSRF                               | Ajustements des pages à partir des maquettes, exécution de 31 nouveaux tests, typage, lint et build | Fonctionnalités implémentées sur `feature/articles` ; PR encore à réaliser |
+| Tâche confiée                                                     | Attendus                                                                                                 | Revue humaine                                                                                       | Décision                                                       |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Proposition de la page Next.js `/topics` et d'un Client Component | Appeler Express, afficher des données PostgreSQL, gérer chargement/erreur/vide, être responsive          | Test dans le navigateur et comparaison aux maquettes transmises                                     | Proposition initiale corrigée avant conservation               |
+| Mise en forme de la page Thèmes                                   | Header MDD, deux colonnes desktop, une mobile, cartes et boutons conformes aux intentions de la maquette | Signalement de la non-conformité visuelle initiale                                                  | Adaptation du composant et retrait de la recherche visible     |
+| Analyse du cas d'API `search[]=React`                             | Rejeter les paramètres imprévus                                                                          | Reproduction de l'anomalie et vérification après modification                                       | Adoption de `z.strictObject()`                                 |
+| Rédaction de la revue et de la documentation                      | Traces des décisions, validations et limites                                                             | À vérifier par le responsable avant le dépôt final                                                  | Documents versionnés ; export PDF restant à effectuer          |
+| Proposition de l'authentification et de ses tests                 | Inscription, connexion, sessions, déconnexion, CSRF, rate limiting et code testable                      | Intégration, contrôles manuels et exécution de 15 tests par le développeur                          | Fonctionnalité validée ; protection des routes privées ajoutée |
+| Proposition des abonnements et de leurs tests                     | Création/suppression, contrôle des doublons, mise à jour du front et protection de session               | Vérifications fonctionnelles, persistance dans DBeaver et exécution de 17 nouveaux tests            | Fonctionnalité validée ; intégrée à `main`                     |
+| Proposition des articles, commentaires et tests                   | Liste/tri, publication, détail, commentaires, contrôles de session et CSRF                               | Ajustements des pages à partir des maquettes, exécution de 31 nouveaux tests, typage, lint et build | Fonctionnalités intégrées à `main`                             |
+| Proposition du profil, navigation et tests                        | Lecture et modification du profil, thèmes suivis, mot de passe sécurisé et maquettes                     | Contrôles manuels, ajustement du panneau mobile et exécution de 17 tests supplémentaires            | Fonctionnalité validée localement ; revue et PR à finaliser    |
 
 **Critères d'acceptation de la délégation (étape 4) :** données réelles, séparation claire des responsabilités, absence d'action d'abonnement simulée **à ce stade**, états UI appropriés, adaptation responsive et tests reproductibles. Pour l'étape 5 s'ajoutent le contrôle des sessions, la gestion des permissions, le CSRF, l'intégrité des relations et des tests HTTP/métier reproductibles.
 
 **Enseignement de la supervision :** une proposition de l'IA peut être fonctionnelle sans être conforme au besoin. La validation humaine a notamment permis de repérer une erreur de comportement HTTP et un écart à la maquette Figma. Le développeur conserve la responsabilité des choix d'architecture, des corrections, de la validation et de la livraison.
 
-**Traçabilité :** commit initial `29a92b2`, branche `feature/topics-e2e`, [rapport de revue](docs/REVUE_TECHNIQUE_ETAPE_4_MDD.md) et [Pull Request #2 fusionnée](https://github.com/AlainDev97/DFSJS-Prenez-en-charge-le-d-veloppement-d-une-application-full-stack-JavaScript-compl-te/pull/2). L'authentification a été fusionnée dans `main`. Les abonnements ont été fusionnés dans `main`. Les articles et commentaires sont en cours sur `feature/articles` ; la Pull Request et sa fusion restent à consigner.
+**Traçabilité :** commit initial `29a92b2`, branche `feature/topics-e2e`, [rapport de revue](docs/REVUE_TECHNIQUE_ETAPE_4_MDD.md) et [Pull Request #2 fusionnée](https://github.com/AlainDev97/DFSJS-Prenez-en-charge-le-d-veloppement-d-une-application-full-stack-JavaScript-compl-te/pull/2). L'authentification a été fusionnée dans `main`. Les abonnements ont été fusionnés dans `main`. Les articles et commentaires sont intégrés à `main`. Le profil est en cours de finalisation sur `feature/user-profile` ; le numéro de sa Pull Request et la fusion restent à consigner.
 
 ---
 
@@ -347,10 +359,11 @@ Pour répondre à l'exigence de posture Lead Developer, une tâche circonscrite 
 
 - Captures des maquettes « Thèmes » desktop et mobile et de leur implémentation réelle.
 - Résultats visibles des appels `GET /api/topics`, `?search=react` et du rejet des paramètres inconnus.
-- Captures ou exports des commandes lint, build et typecheck réussies.
+- Captures ou exports des commandes lint, build et typecheck réussies (nouveau build à confirmer après modification du menu mobile).
+- Captures desktop/mobile du profil, des thèmes suivis et du nouveau panneau latéral.
 - Test spécifique de l'erreur réseau et du bouton « Réessayer ».
 - Lien vers la Pull Request et, après revue, son état final.
-- Résultats Vitest **déjà exécutés** (63 tests réussis le 11/11/2026) ; rapports Playwright et audits Lighthouse à ajouter seulement s'ils sont effectivement réalisés.
+- Résultats Vitest **déjà exécutés** (80 tests réussis le 11/11/2026) ; rapports Playwright et audits Lighthouse à ajouter seulement s'ils sont effectivement réalisés.
 
 ### 5.3 Étape 5.1 — Authentification des utilisateurs
 
@@ -427,32 +440,34 @@ Les 12 premiers tests automatisés ont été exécutés avec succès, puis 3 tes
 
 **Supervision de l'IA :** les premières propositions de code et de scénarios de test ont été fournies par ChatGPT. Le développeur a intégré et vérifié les solutions, fait ajuster les interfaces aux maquettes et exécuté les contrôles de qualité. Cette assistance ne remplace ni une revue du code ni sa compréhension pour la soutenance.
 
-**Conclusion :** les parcours principaux des articles et commentaires sont développés et la suite automatisée passe. La branche `feature/articles` doit encore faire l'objet de sa revue finale, de sa documentation actualisée, de son commit et de sa Pull Request avant fusion dans `main`.
+**Points encore ouverts :** confirmer manuellement le `404` pour un UUID d'article inexistant ; conserver la preuve d'un commentaire réellement enregistré et affiché après rafraîchissement ; ajouter à terme des tests de composants React, des E2E Playwright et des tests d'intégration avec une base dédiée. Aucun taux de couverture de code n'a été mesuré.
 
-### 5.6 Étape 5.4 — Profil utilisateur
+**Conclusion :** les parcours principaux des articles et commentaires sont développés et les 31 tests propres à ce module passent ; cette fonctionnalité a été intégrée à `main`.
 
-**Objectif :** permettre à un utilisateur authentifié de consulter et modifier ses informations personnelles, ainsi que de gérer ses abonnements aux thèmes.
+### 5.6 Étape 5.4 — Profil utilisateur et navigation mobile
+
+**Objectif :** permettre à l’utilisateur authentifié de consulter et modifier son compte et de retrouver les thèmes qu’il suit, conformément aux maquettes Figma.
+
+**Architecture :** la page Next.js `/profile` est placée dans le groupe `(protected)` ; son composant React consomme `GET /api/auth/me`, `PATCH /api/auth/me` et `GET /api/subscriptions`. La mise à jour du profil suit Router → Controller → Service → Repository → Prisma/PostgreSQL. Le désabonnement réutilise `DELETE /api/subscriptions/:topicId`. Aucune migration Prisma supplémentaire n’a été nécessaire.
 
 **Fonctionnalités implémentées :**
 
-- Page `/profile` protégée par authentification, conforme aux maquettes Figma desktop et mobile.
-- Affichage du pseudo et de l'adresse email de l'utilisateur connecté.
-- Modification du pseudo et de l'email après vérification du mot de passe actuel.
-- Modification facultative du mot de passe avec hachage Argon2.
-- Affichage des thèmes suivis avec leur nom et leur description.
-- Désabonnement depuis le profil, avec actualisation immédiate de l'interface et persistance PostgreSQL.
+- Affichage du pseudo et de l’adresse email du compte connecté, avec formulaire responsive.
+- Modification du pseudo et de l’email après vérification du mot de passe actuel.
+- Changement facultatif du mot de passe ; nouveau mot de passe haché via Argon2.
+- Affichage des thèmes suivis avec leur titre et description ; désabonnement immédiat sans rechargement manuel de la page.
+- Accès au profil par l’icône du header desktop et du menu mobile. Le pseudo n’est pas ajouté au header : il ne figure pas dans la maquette demandée.
+- Remplacement du menu déroulant mobile initial par un panneau latéral occupant toute la hauteur, avec fond estompé, navigation en haut et icône Profil en bas, selon la maquette.
 
-**Architecture et sécurité :** la modification du compte utilise `PATCH /api/auth/me`. L'identité de l'utilisateur provient de la session Express. Les données sont validées avec Zod, les requêtes de modification sont protégées par un jeton CSRF et les contraintes uniques Prisma empêchent les doublons de pseudo ou d'email.
+**Sécurité et validation :** `PATCH /api/auth/me` nécessite une session valide, un jeton CSRF et le mot de passe actuel. Les entrées sont validées avec Zod (`z.strictObject()`), les doublons sont détectés par les contraintes uniques Prisma (`P2002`) et le hash du mot de passe n’est jamais exposé. La suppression d’abonnement utilise exclusivement le `userId` de la session Express.
 
-Le mot de passe actuel est vérifié avec Argon2. Le nouveau mot de passe est haché avant son enregistrement et aucun hash n'est retourné au navigateur.
+**Tests et validation :** 17 tests automatisés supplémentaires ont été exécutés avec succès : 10 scénarios API (`profile.api.test.ts`) et 7 scénarios métier (`profile.service.test.ts`). Ces derniers vérifient notamment le mot de passe actuel, le hachage Argon2 d’un nouveau mot de passe, les doublons et la disparition d’un compte. La suite complète atteint **80 tests réussis sur 10 fichiers au 11/11/2026**. Les contrôles manuels du responsive, du désabonnement et de la présentation mobile ont été confirmés par le développeur. Le lint, le typecheck et le build **restent à reconfirmer après les tout derniers ajustements du menu mobile**, avant fusion.
 
-**Tests et validation :** 17 nouveaux tests automatisés ont été exécutés avec succès : 10 tests HTTP du profil et 7 tests du service métier. La suite complète compte désormais **80 tests réussis sur 10 fichiers**, le 11 novembre 2026.
+**Délégation et supervision de l’IA :** ChatGPT a proposé la structure, le code initial et les scénarios de tests. Le développeur a intégré les fichiers, signalé les différences par rapport à Figma, validé les parcours et exécuté la suite Vitest. Les décisions et la validation finale restent sous sa responsabilité.
 
-**Supervision de l'IA :** le code initial et les scénarios de tests ont été proposés avec l'assistance de ChatGPT. Le développeur a intégré les modifications, vérifié les fonctionnalités et exécuté les tests, en conservant la responsabilité de la validation finale.
+**Limites et travaux restants :** les tests HTTP/métier isolent les dépendances par mocks ; ils ne remplacent pas les tests E2E Playwright ou les tests de persistance sur une base dédiée. Aucun taux de couverture chiffré ni audit Lighthouse n’est encore disponible. La branche `feature/user-profile` est à relire, publier puis fusionner dans `main`.
 
-**Limites :** les tests automatisés utilisent des mocks et ne remplacent pas les tests E2E navigateur ou les tests d'intégration avec une base PostgreSQL dédiée. Aucune mesure chiffrée de couverture n'est encore disponible.
-
-**Conclusion :** la gestion du profil et des abonnements utilisateur est fonctionnelle. Le module est prêt pour la revue finale et la Pull Request après validation des contrôles de qualité.
+**Conclusion :** le module Profil et son interface responsive sont développés et validés fonctionnellement. La livraison dans `main` dépend de la validation technique finale et de la Pull Request.
 
 **Références du projet :**
 
