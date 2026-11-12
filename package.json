@@ -10,9 +10,19 @@
     "db:down": "docker compose down",
     "db:migrate": "npm --prefix backend run db:migrate",
     "db:seed": "npm --prefix backend run db:seed",
-    "build": "npm --prefix frontend run build && npm --prefix backend run build"
+    "build": "npm --prefix frontend run build && npm --prefix backend run build",
+    "test:e2e": "playwright test",
+    "test:e2e:report": "playwright show-report",
+    "db:e2e:up": "docker compose -f docker-compose.e2e.yml --env-file .env.e2e up -d --wait",
+    "db:e2e:prepare": "node scripts/prepare-e2e-db.mjs",
+    "db:e2e:down": "docker compose -f docker-compose.e2e.yml --env-file .env.e2e down"
   },
   "devDependencies": {
-    "concurrently": "^10.0.6"
+    "@playwright/test": "^1.65.0",
+    "@types/node": "^26.6.6",
+    "@types/pg": "^8.23.1",
+    "concurrently": "^10.0.6",
+    "dotenv": "^18.0.10",
+    "pg": "^8.23.1"
   }
 }
