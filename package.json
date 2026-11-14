@@ -15,7 +15,10 @@
     "test:e2e:report": "playwright show-report",
     "db:e2e:up": "docker compose -f docker-compose.e2e.yml --env-file .env.e2e up -d --wait",
     "db:e2e:prepare": "node scripts/prepare-e2e-db.mjs",
-    "db:e2e:down": "docker compose -f docker-compose.e2e.yml --env-file .env.e2e down"
+    "db:e2e:down": "docker compose -f docker-compose.e2e.yml --env-file .env.e2e down",
+    "test:coverage": "npm --prefix frontend run test:coverage && npm --prefix backend run test:coverage",
+    "test:summary": "node scripts/coverage-summary.mjs",
+    "test:all": "npm run test:coverage && npm run db:e2e:up && npm run db:e2e:prepare && npm run test:e2e && npm run test:summary"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.0",
