@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { redirectIfAuthenticated } from "@/lib/redirect-if-authenticated";
 import { AuthPageLayout } from "@/components/layout/auth-page-layout";
 import { LoginForm } from "@/features/auth/components/login-form";
 
@@ -11,7 +12,9 @@ export const metadata: Metadata = {
 /**
  * Page de connexion de MDD.
  */
-export default function LoginPage() {
+export default async function LoginPage() {
+  await redirectIfAuthenticated();
+
   return (
     <AuthPageLayout title="Connexion">
       <LoginForm />

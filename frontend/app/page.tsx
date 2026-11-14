@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { redirectIfAuthenticated } from "@/lib/redirect-if-authenticated";
 
-export const Home = () => {
+export default async function Home() {
+  await redirectIfAuthenticated();
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background">
       <div className="text-center space-y-8">
@@ -10,9 +13,7 @@ export const Home = () => {
           </div>
         </div>
 
-        <h1 className="text-3xl font-bold text-foreground">
-          Monde de Dév
-        </h1>
+        <h1 className="text-3xl font-bold text-foreground">Monde de Dév</h1>
 
         <div className="flex gap-4">
           <Link
@@ -31,6 +32,4 @@ export const Home = () => {
       </div>
     </div>
   );
-};
-
-export default Home;
+}

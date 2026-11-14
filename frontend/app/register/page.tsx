@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { redirectIfAuthenticated } from "@/lib/redirect-if-authenticated";
 import { AuthPageLayout } from "@/components/layout/auth-page-layout";
 import { RegisterForm } from "@/features/auth/components/register-form";
 
@@ -11,7 +12,9 @@ export const metadata: Metadata = {
 /**
  * Page d'inscription de MDD.
  */
-export default function RegisterPage() {
+export default async function RegisterPage() {
+  await redirectIfAuthenticated();
+
   return (
     <AuthPageLayout title="Inscription">
       <RegisterForm />
