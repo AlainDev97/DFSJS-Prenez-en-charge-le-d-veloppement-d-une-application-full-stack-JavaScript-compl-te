@@ -183,7 +183,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="min-w-32 rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-w-32 rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
         >
           {isSubmitting ? "Connexion..." : "Se connecter"}
         </button>

@@ -112,10 +112,10 @@ export function ArticlesList() {
 
   return (
     <section aria-label="Liste des articles">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Link
           href="/articles/new"
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          className="rounded-md bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
           Créer un article
         </Link>
@@ -129,7 +129,7 @@ export function ArticlesList() {
               ? "Tri décroissant. Cliquer pour afficher les plus anciens d'abord."
               : "Tri croissant. Cliquer pour afficher les plus récents d'abord."
           }
-          className="flex items-center gap-2 text-sm font-medium hover:text-primary disabled:opacity-50"
+          className="flex items-center justify-center gap-2 text-sm font-medium hover:text-primary disabled:opacity-50 sm:justify-start"
         >
           Trier par
           {sort === "newest" ? (

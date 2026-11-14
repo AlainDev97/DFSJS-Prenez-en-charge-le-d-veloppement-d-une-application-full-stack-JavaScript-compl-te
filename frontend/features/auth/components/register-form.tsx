@@ -251,7 +251,7 @@ export function RegisterForm() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="min-w-32 rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-w-32 rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
         >
           {isSubmitting ? "Inscription..." : "S'inscrire"}
         </button>

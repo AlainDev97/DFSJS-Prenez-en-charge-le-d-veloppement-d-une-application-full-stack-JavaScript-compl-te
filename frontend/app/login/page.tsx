@@ -16,7 +16,7 @@ export default async function LoginPage() {
   await redirectIfAuthenticated();
 
   return (
-    <AuthPageLayout title="Connexion">
+    <AuthPageLayout title="Se connecter">
       <LoginForm />
     </AuthPageLayout>
   );
