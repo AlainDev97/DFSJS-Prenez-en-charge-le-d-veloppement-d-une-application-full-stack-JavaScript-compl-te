@@ -313,6 +313,14 @@ Les principaux éléments disponibles sont :
 - Historique Git, branches et Pull Requests.
 - Revue technique de l'étape 4.
 
+### Captures des interfaces
+
+Des captures d'écran des principales pages de MDD ont été réalisées en versions Desktop et Mobile afin d'illustrer la conformité aux maquettes Figma et l'adaptation responsive de l'application.
+
+Les captures sont disponibles dans le dossier [`docs/screenshots/`](docs/screenshots/).
+
+Les rapports d'audit Lighthouse sont également conservés dans [`docs/lighthouse/`](docs/lighthouse/).
+
 ### 7.2 Points restant à finaliser
 
 - Réaliser les audits Lighthouse et d'accessibilité.
