@@ -265,7 +265,15 @@ Plusieurs pratiques limitent les traitements inutiles :
 - Annulation de requêtes avec `AbortController`.
 - Séparation des responsabilités entre les composants et les services.
 
-**Les audits Lighthouse, l'accessibilité complète et les tests de charge restent à réaliser.** Aucun score de performance non mesuré n'est présenté comme validé.
+### Audits Lighthouse
+
+Des audits Lighthouse ont été réalisés sur les principales pages de MDD, en versions Desktop et Mobile.
+
+Les résultats Desktop sont globalement satisfaisants. Sur Mobile, la page d'accueil obtient 92/100 en performance et 100/100 sur les trois autres catégories. La liste des articles obtient 67/100 en performance, ce qui constitue un axe d'optimisation.
+
+Les captures des audits sont disponibles dans [`docs/lighthouse/`](docs/lighthouse/).
+
+Les analyses de performance seront complétées par l'étude des métriques et recommandations Lighthouse.
 
 Les points d'amélioration identifiés comprennent la pagination des listes volumineuses, la gestion du cache et la suppression des avertissements non bloquants de Next.js.
 
