@@ -42,7 +42,7 @@ export const authController = {
         return;
       }
 
-      console.error("Erreur lors de l'inscription :", error);
+      console.error("Erreur lors de l'inscription :");
 
       res.status(500).json({
         error: "Une erreur interne est survenue.",
