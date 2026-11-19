@@ -133,22 +133,40 @@ describe("AuthRepository", () => {
 });
 
 describe("ArticlesRepository", () => {
-  it("trie les articles du plus récent au plus ancien par défaut", async () => {
-    await articlesRepository.findAll();
+  it("liste uniquement les articles des thèmes suivis, du plus récent au plus ancien", async () => {
+    await articlesRepository.findAll(userId);
 
     expect(db.post.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: {
+          topic: {
+            subscriptions: {
+              some: {
+                userId,
+              },
+            },
+          },
+        },
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         take: 50,
       }),
     );
   });
 
-  it("permet le tri des articles les plus anciens", async () => {
-    await articlesRepository.findAll("oldest");
+  it("conserve le filtre des abonnements avec le tri croissant", async () => {
+    await articlesRepository.findAll(userId, "oldest");
 
     expect(db.post.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: {
+          topic: {
+            subscriptions: {
+              some: {
+                userId,
+              },
+            },
+          },
+        },
         orderBy: [{ createdAt: "asc" }, { id: "desc" }],
       }),
     );

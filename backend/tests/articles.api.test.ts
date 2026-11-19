@@ -184,7 +184,7 @@ describe("API Articles et Commentaires", () => {
     expect(response.body.data).toHaveLength(1);
     expect(response.body.data[0].title).toBe(article.title);
 
-    expect(articlesMock.getAll).toHaveBeenCalledWith("newest");
+    expect(articlesMock.getAll).toHaveBeenCalledWith(user.id, "newest");
   });
 
   it("accepte le tri par articles les plus anciens", async () => {
@@ -194,7 +194,7 @@ describe("API Articles et Commentaires", () => {
 
     await agent.get("/api/articles?sort=oldest").expect(200);
 
-    expect(articlesMock.getAll).toHaveBeenCalledWith("oldest");
+    expect(articlesMock.getAll).toHaveBeenCalledWith(user.id, "oldest");
   });
 
   it("rejette un tri invalide", async () => {

@@ -41,9 +41,9 @@ describe("ArticlesService", () => {
       },
     ]);
 
-    const result = await articlesService.getAll();
+    const result = await articlesService.getAll(authorId);
 
-    expect(repository.findAll).toHaveBeenCalledWith("newest");
+    expect(repository.findAll).toHaveBeenCalledWith(authorId, "newest");
     expect(result[0].excerpt).toBe(articleInput.content);
     expect(result[0]).not.toHaveProperty("content");
   });
@@ -59,7 +59,7 @@ describe("ArticlesService", () => {
       },
     ]);
 
-    const result = await articlesService.getAll();
+    const result = await articlesService.getAll(authorId);
 
     expect(result[0].excerpt).toBe("A".repeat(180) + "…");
     expect(result[0].excerpt.length).toBe(181);
@@ -68,9 +68,9 @@ describe("ArticlesService", () => {
   it("transmet le tri oldest au repository", async () => {
     repository.findAll.mockResolvedValue([]);
 
-    const result = await articlesService.getAll("oldest");
+    const result = await articlesService.getAll(authorId, "oldest");
 
-    expect(repository.findAll).toHaveBeenCalledWith("oldest");
+    expect(repository.findAll).toHaveBeenCalledWith(authorId, "oldest");
     expect(result).toEqual([]);
   });
 
