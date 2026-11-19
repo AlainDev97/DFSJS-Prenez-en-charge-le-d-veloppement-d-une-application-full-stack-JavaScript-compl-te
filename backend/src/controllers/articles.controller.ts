@@ -25,9 +25,19 @@ export const articlesController = {
   /**
    * GET /api/articles
    *
-   * Retourne les articles triés par date.
+   * Retourne le fil d'actualité personnalisé
+   * de l'utilisateur authentifié.
    */
   async getAll(req: Request, res: Response) {
+    const userId = req.session.userId;
+
+    if (!userId) {
+      res.status(401).json({
+        error: "Non authentifié.",
+      });
+      return;
+    }
+
     const parsed = articlesQuerySchema.safeParse(req.query);
 
     if (!parsed.success) {
@@ -38,7 +48,7 @@ export const articlesController = {
     }
 
     try {
-      const articles = await articlesService.getAll(parsed.data.sort);
+      const articles = await articlesService.getAll(userId, parsed.data.sort);
 
       res.status(200).json({
         data: articles,

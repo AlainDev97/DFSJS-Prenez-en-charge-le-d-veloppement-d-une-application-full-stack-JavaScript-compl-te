@@ -4,11 +4,23 @@ export type ArticleSort = "newest" | "oldest";
 
 export const articlesRepository = {
   /**
-   * Récupère les articles et leurs auteurs.
-   * Le tri est effectué directement dans PostgreSQL.
+   * Récupère les articles des thèmes suivis par l'utilisateur.
+   * Le filtrage et le tri sont effectués dans PostgreSQL.
+   *
+   * @param userId - Identifiant de l'utilisateur connecté.
+   * @param sort - Ordre chronologique des articles.
    */
-  findAll(sort: ArticleSort = "newest") {
+  findAll(userId: string, sort: ArticleSort = "newest") {
     return prisma.post.findMany({
+      where: {
+        topic: {
+          subscriptions: {
+            some: {
+              userId,
+            },
+          },
+        },
+      },
       select: {
         id: true,
         title: true,

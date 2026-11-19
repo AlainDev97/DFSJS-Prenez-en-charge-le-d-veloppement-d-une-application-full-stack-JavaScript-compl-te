@@ -24,13 +24,14 @@ export class ArticleNotFoundError extends Error {
 
 export const articlesService = {
   /**
-   * Récupère les articles avec un extrait de leur contenu.
+   * Récupère le fil d'actualité personnalisé de l'utilisateur
+   * avec un extrait du contenu de chaque article.
    *
-   * On conserve le contenu intégral en base, mais on
-   * ne l'envoie pas dans la réponse de la liste.
+   * @param userId - Identifiant de l'utilisateur connecté.
+   * @param sort - Ordre chronologique des articles.
    */
-  async getAll(sort: ArticleSort = "newest") {
-    const articles = await articlesRepository.findAll(sort);
+  async getAll(userId: string, sort: ArticleSort = "newest") {
+    const articles = await articlesRepository.findAll(userId, sort);
 
     return articles.map(({ content, ...article }) => ({
       ...article,
