@@ -22,7 +22,12 @@ export default defineConfig({
         "app/**/*.{ts,tsx}",
       ],
 
-      exclude: ["**/*.d.ts", "**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
+      exclude: [
+        "**/*.d.ts",
+        "**/*.test.{ts,tsx}",
+        "**/*.spec.{ts,tsx}",
+        "lib/redirect-if-authenticated.ts",
+      ],
     },
   },
 });

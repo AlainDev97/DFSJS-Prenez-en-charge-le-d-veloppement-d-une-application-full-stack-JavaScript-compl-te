@@ -11,7 +11,10 @@ test.describe("Parcours utilisateur MDD", () => {
     await expect(page).toHaveURL(/\/login$/);
 
     await expect(
-      page.getByRole("heading", { name: "Connexion" }),
+      page.getByRole("heading", {
+        name: "Se connecter",
+        exact: true,
+      }),
     ).toBeVisible();
   });
 
