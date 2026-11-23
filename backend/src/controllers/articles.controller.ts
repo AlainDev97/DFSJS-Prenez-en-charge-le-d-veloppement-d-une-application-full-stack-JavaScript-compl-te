@@ -54,11 +54,7 @@ export const articlesController = {
         data: articles,
       });
     } catch (error) {
-      console.error("Erreur de récupération des articles :", error);
-
-      res.status(500).json({
-        error: "Impossible de récupérer les articles.",
-      });
+      throw error;
     }
   },
 
@@ -101,11 +97,7 @@ export const articlesController = {
         return;
       }
 
-      console.error("Erreur de création d'article :", error);
-
-      res.status(500).json({
-        error: "Impossible de créer l'article.",
-      });
+      throw error;
     }
   },
 
@@ -138,11 +130,7 @@ export const articlesController = {
         return;
       }
 
-      console.error("Erreur de consultation d'article :", error);
-
-      res.status(500).json({
-        error: "Impossible de récupérer l'article.",
-      });
+      throw error;
     }
   },
 };

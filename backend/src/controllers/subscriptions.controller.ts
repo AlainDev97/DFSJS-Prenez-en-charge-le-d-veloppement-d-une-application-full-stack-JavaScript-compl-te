@@ -35,10 +35,7 @@ export const subscriptionsController = {
         data: subscriptions,
       });
     } catch (error) {
-      console.error("Erreur de lecture des abonnements :", error);
-      res.status(500).json({
-        error: "Impossible de récupérer les abonnements.",
-      });
+      throw error;
     }
   },
 
@@ -84,11 +81,7 @@ export const subscriptionsController = {
         return;
       }
 
-      console.error("Erreur de création d'abonnement :", error);
-
-      res.status(500).json({
-        error: "Impossible de créer l'abonnement.",
-      });
+      throw error;
     }
   },
 
@@ -118,11 +111,7 @@ export const subscriptionsController = {
 
       res.status(204).end();
     } catch (error) {
-      console.error("Erreur de suppression d'abonnement :", error);
-
-      res.status(500).json({
-        error: "Impossible de supprimer l'abonnement.",
-      });
+      throw error;
     }
   },
 };

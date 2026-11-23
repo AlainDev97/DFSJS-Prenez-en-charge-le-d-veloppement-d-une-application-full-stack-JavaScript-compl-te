@@ -1,5 +1,4 @@
 import type { Request, Response } from "express";
-
 import { registerSchema } from "../schemas/auth.schema.js";
 import { loginSchema, updateProfileSchema } from "../schemas/auth.schema.js";
 import {
@@ -42,11 +41,7 @@ export const authController = {
         return;
       }
 
-      console.error("Erreur lors de l'inscription :");
-
-      res.status(500).json({
-        error: "Une erreur interne est survenue.",
-      });
+      throw error;
     }
   },
 
@@ -95,11 +90,7 @@ export const authController = {
         return;
       }
 
-      console.error("Erreur lors de la connexion :", error);
-
-      res.status(500).json({
-        error: "Une erreur interne est survenue.",
-      });
+      throw error;
     }
   },
 
@@ -126,11 +117,7 @@ export const authController = {
 
       res.status(200).json({ data: user });
     } catch (error) {
-      console.error("Erreur de récupération du profil :", error);
-
-      res.status(500).json({
-        error: "Une erreur interne est survenue.",
-      });
+      throw error;
     }
   },
 
@@ -161,11 +148,7 @@ export const authController = {
 
       res.status(204).end();
     } catch (error) {
-      console.error("Erreur lors de la déconnexion :", error);
-
-      res.status(500).json({
-        error: "Impossible de terminer la session.",
-      });
+      throw error;
     }
   },
 
@@ -214,11 +197,7 @@ export const authController = {
         return;
       }
 
-      console.error("Erreur de modification du profil :", error);
-
-      res.status(500).json({
-        error: "Impossible de modifier le profil.",
-      });
+      throw error;
     }
   },
 };

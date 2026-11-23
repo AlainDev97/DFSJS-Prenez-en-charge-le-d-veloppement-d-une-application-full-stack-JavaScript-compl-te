@@ -59,11 +59,7 @@ export const commentsController = {
         return;
       }
 
-      console.error("Erreur de création du commentaire :", error);
-
-      res.status(500).json({
-        error: "Impossible de publier le commentaire.",
-      });
+      throw error;
     }
   },
 };

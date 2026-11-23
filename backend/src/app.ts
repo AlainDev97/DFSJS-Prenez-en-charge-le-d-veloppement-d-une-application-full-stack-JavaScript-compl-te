@@ -9,6 +9,7 @@ import { subscriptionsRouter } from "./routes/subscriptions.routes.js";
 import { articlesRouter } from "./routes/articles.routes.js";
 
 import { csrfProtection } from "./middleware/csrf.middleware.js";
+import { errorHandler } from "./middleware/error.middleware.js";
 
 export const app = express();
 
@@ -54,3 +55,5 @@ app.get("/api/health/db", async (_req, res) => {
     });
   }
 });
+
+app.use(errorHandler);
