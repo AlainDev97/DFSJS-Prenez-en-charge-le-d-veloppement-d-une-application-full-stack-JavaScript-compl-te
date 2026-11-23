@@ -341,4 +341,4 @@ Les prochaines étapes portent principalement sur les audits complémentaires, l
 
 **Références :** [Next.js](https://nextjs.org/docs) · [Express](https://expressjs.com/) · [Prisma](https://www.prisma.io/docs) · [Vitest](https://vitest.dev/) · [Playwright](https://playwright.dev/)
 
-_Document évolutif — version 0.7.0, 14 novembre 2026._
+Version 0.7.0, 23 novembres 2026.
