@@ -1,344 +1,422 @@
 # Documentation et rapport technique — MDD (Monde de Dév)
 
-**Projet :** P5 — OpenClassrooms, Lead Developer JavaScript (RNCP 7)  
+**Projet :** P5 — OpenClassrooms, Lead Developer JavaScript (RNCP 7), option B  
 **Auteur :** Alain Bonneau  
-**Version :** 0.7.0  
-**Dernière mise à jour :** 14/11/2026  
-**Dépôt :** [GitHub — Projet MDD](https://github.com/AlainDev97/DFSJS-Prenez-en-charge-le-d-veloppement-d-une-application-full-stack-JavaScript-compl-te)
+**Version :** 1.0.0  
+**Dernière mise à jour :** 23/11/2026  
+**Dépôt :** [GitHub — Projet MDD](https://github.com/AlainDev97/DFSJS-Prenez-en-charge-le-d-veloppement-d-une-application-full-stack-JavaScript-compl-te)  
+**Périmètre :** MVP pédagogique, exécuté et validé en environnement local.
 
 ---
 
 ## 1. Présentation du projet
 
-### 1.1 Objectifs
+### 1.1. Contexte et objectifs
 
-MDD (Monde de Dév) est une application web communautaire destinée aux développeurs. Elle permet de découvrir des thèmes de programmation, de suivre ses centres d'intérêt, de publier des articles et d'échanger au moyen de commentaires.
+ORION souhaite disposer d'un premier réseau social dédié aux développeurs : **MDD — Monde de Dév**. Ce MVP permet de partager des connaissances autour de thèmes techniques et de valider le parcours utilisateur avant toute évolution éventuelle du produit.
 
-Le projet vise à développer une application full-stack JavaScript maintenable, sécurisée et conforme aux maquettes Figma.
+La réalisation s'appuie sur les spécifications et les maquettes Figma fournies pour le scénario fictif. Les priorités sont la conformité fonctionnelle, la maintenabilité, la sécurité des accès et la vérification du fonctionnement par des tests automatisés.
 
-### 1.2 Périmètre fonctionnel
+### 1.2. Périmètre fonctionnel réalisé
 
-| Fonctionnalité                                  | État     |
-| ----------------------------------------------- | -------- |
-| Inscription, connexion et déconnexion           | Réalisée |
-| Authentification et gestion des sessions        | Réalisée |
-| Consultation et recherche de thèmes             | Réalisée |
-| Abonnement et désabonnement aux thèmes          | Réalisée |
-| Consultation, création et tri des articles      | Réalisée |
-| Publication et consultation des commentaires    | Réalisée |
-| Fil d'actualité personnalisé                    | Réalisée |
-| Consultation et modification du profil          | Réalisée |
-| Changement de mot de passe                      | Réalisée |
-| Interface responsive et navigation mobile       | Réalisée |
-| Contrôle d'accès aux pages publiques et privées | Réalisé  |
+| Domaine              | Fonctionnalités mises en œuvre                                                                                                |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Comptes              | Inscription, connexion, déconnexion et session persistante                                                                    |
+| Profil               | Consultation, modification du pseudonyme et de l'e-mail, changement du mot de passe après vérification du mot de passe actuel |
+| Thèmes               | Consultation et recherche des thèmes de programmation                                                                         |
+| Abonnements          | Abonnement et désabonnement à un thème                                                                                        |
+| Articles             | Fil personnalisé selon les thèmes suivis, tri chronologique, création et consultation d'articles                              |
+| Commentaires         | Publication et affichage des commentaires liés aux articles                                                                   |
+| Interface            | Pages adaptées aux écrans desktop et mobile, messages de chargement et d'erreur                                               |
+| Informations légales | Pages de mentions légales et de politique de confidentialité                                                                  |
 
-La première fonctionnalité développée de bout en bout consistait à récupérer les thèmes depuis PostgreSQL, à travers l'API Express, puis à les afficher dans Next.js. Cette étape a permis de valider l'architecture avant la réalisation des autres fonctionnalités.
+La première fonctionnalité intégrée de bout en bout a été la consultation des thèmes, depuis PostgreSQL jusqu'à l'affichage React en passant par l'API Express. Elle a servi à vérifier l'architecture avant de développer les autres parcours.
 
----
+**Hors périmètre du MVP :** messagerie privée, notifications, administration avancée et déploiement public.
 
 ## 2. Architecture et conception
 
-### 2.1 Architecture générale
+### 2.1. Architecture générale
+
+Le projet utilise un **monorepo** avec deux applications distinctes : Next.js pour le front-end et Express pour l'API REST.
+
+```text
+Navigateur
+    ↓
+Next.js 16 / React 19 (pages, composants, formulaires)
+    ↓ Requêtes HTTP / Fetch, réponses JSON
+API REST Express 5
+    ↓
+Routes → Contrôleurs → Services métier → Repositories
+    ↓
+Prisma ORM 7 → PostgreSQL 17
+```
+
+- **Présentation :** App Router Next.js, Server Components pour les layouts et vérifications côté serveur, Client Components pour les interactions et les appels API depuis le navigateur.
+- **API :** routes REST et contrôleurs Express ; validation des paramètres et des corps avec Zod.
+- **Métier :** services responsables des règles fonctionnelles et des erreurs métier.
+- **Données :** repositories Prisma isolant les requêtes PostgreSQL.
+- **Sécurité transversale :** middlewares de session, authentification, protection CSRF, limitation des tentatives et gestion des erreurs inattendues.
+
+Cette séparation facilite l'isolation des responsabilités, les tests et la maintenance. En contrepartie, elle impose de gérer explicitement CORS, les cookies et la communication entre Next.js et Express. **Aucune Server Action n'est nécessaire aux mutations du MVP : elles utilisent l'API REST.**
+
+### 2.2. Organisation du dépôt
+
+| Emplacement                 | Rôle                                                                       |
+| --------------------------- | -------------------------------------------------------------------------- |
+| `frontend/app/`             | Pages, layouts, routes publiques et protégées                              |
+| `frontend/features/`        | Composants fonctionnels : authentification, thèmes, articles, profil       |
+| `frontend/components/`      | Composants de présentation partagés                                        |
+| `frontend/lib/`             | Client API, utilitaires et contrôles de session côté serveur               |
+| `frontend/tests/`           | Tests Vitest et React Testing Library                                      |
+| `backend/src/routes/`       | Déclaration des endpoints                                                  |
+| `backend/src/controllers/`  | Entrées HTTP, schémas de validation et réponses                            |
+| `backend/src/services/`     | Traitements et règles métier                                               |
+| `backend/src/repositories/` | Requêtes via Prisma                                                        |
+| `backend/src/middleware/`   | Session, authentification, CSRF, rate limiting, erreurs                    |
+| `backend/prisma/`           | Schéma, migrations et données fictives                                     |
+| `backend/tests/`            | Tests unitaires et API avec Vitest / Supertest                             |
+| `e2e/`                      | Parcours Playwright sur une base PostgreSQL dédiée                         |
+| `scripts/`                  | Préparation de l'environnement E2E et calcul de couverture                 |
+| `docs/`                     | Captures d'interfaces, résultats Lighthouse, revue technique intermédiaire |
+
+### 2.3. Choix techniques
+
+| Technologie                             | Utilisation et justification                                              |
+| --------------------------------------- | ------------------------------------------------------------------------- |
+| Next.js 16 / React 19                   | Interface, App Router, composants réutilisables et rendu adapté au besoin |
+| TypeScript strict                       | Contrats typés, détection précoce d'erreurs et lisibilité                 |
+| Express 5                               | API REST indépendante, structurée en couches et testable                  |
+| Prisma 7                                | Accès aux données typé, relations et migrations                           |
+| PostgreSQL 17                           | Modèle relationnel et contraintes d'intégrité                             |
+| Zod 4                                   | Validation stricte des entrées HTTP                                       |
+| Tailwind CSS 4                          | Intégration responsive des maquettes                                      |
+| `express-session` / `connect-pg-simple` | Sessions serveur persistées dans PostgreSQL                               |
+| Argon2                                  | Hachage et vérification des mots de passe                                 |
+| Docker Compose                          | Bases PostgreSQL locales reproductibles                                   |
+| Vitest / RTL / Supertest / Playwright   | Tests unitaires, composants, API et parcours réels                        |
+| Git / GitHub                            | Historique et versionnement des évolutions                                |
+
+### 2.4. Modèle de données
+
+Le schéma de référence est dans [`backend/prisma/schema.prisma`](backend/prisma/schema.prisma). Il comprend cinq modèles principaux :
+
+| Modèle         | Données et relations principales                                                               |
+| -------------- | ---------------------------------------------------------------------------------------------- |
+| `User`         | UUID, e-mail et pseudonyme uniques, `passwordHash`, dates, articles, commentaires, abonnements |
+| `Topic`        | UUID, nom unique, description facultative, articles et abonnements                             |
+| `Subscription` | Association `User`–`Topic`, date, clé primaire composite `(userId, topicId)`                   |
+| `Post`         | UUID, titre, contenu, auteur, thème, dates de création et modification                         |
+| `Comment`      | UUID, contenu, auteur, article, date de création                                               |
+
+La table `Subscription` matérialise une relation **N:N** entre utilisateurs et thèmes. La clé composée empêche les abonnements en double ; les clés étrangères préservent les relations. Les auteurs sont associés aux opérations depuis la session authentifiée et les dates sont renseignées côté serveur ou base de données. Les migrations sont versionnées dans `backend/prisma/migrations/`.
+
+### 2.5. API REST
+
+Les routes sont définies dans `backend/src/routes/` et montées sous `/api` dans `backend/src/app.ts`.
+
+| Méthode | Endpoint                      | Fonction                                               |
+| ------- | ----------------------------- | ------------------------------------------------------ |
+| GET     | `/api/health`                 | Vérifier la disponibilité de l'API                     |
+| GET     | `/api/health/db`              | Vérifier la connexion PostgreSQL                       |
+| GET     | `/api/auth/csrf`              | Récupérer le jeton CSRF de session                     |
+| POST    | `/api/auth/register`          | Créer un compte                                        |
+| POST    | `/api/auth/login`             | Se connecter et établir la session                     |
+| POST    | `/api/auth/logout`            | Détruire la session                                    |
+| GET     | `/api/auth/me`                | Consulter le compte authentifié                        |
+| PATCH   | `/api/auth/me`                | Modifier le profil après vérification du mot de passe  |
+| GET     | `/api/topics`                 | Lister ou rechercher des thèmes (`?search=...`)        |
+| GET     | `/api/subscriptions`          | Récupérer ses abonnements                              |
+| POST    | `/api/subscriptions`          | S'abonner à un thème                                   |
+| DELETE  | `/api/subscriptions/:topicId` | Se désabonner d'un thème                               |
+| GET     | `/api/articles?sort=newest`   | Fil d'actualité personnalisé, tri `newest` ou `oldest` |
+| GET     | `/api/articles/:id`           | Article et commentaires associés                       |
+| POST    | `/api/articles`               | Publier un article                                     |
+| POST    | `/api/articles/:id/comments`  | Publier un commentaire                                 |
+
+Les ressources fonctionnelles sont protégées par la session lorsqu'elles nécessitent un utilisateur connecté, y compris la consultation des thèmes dans l'API actuelle. Les réponses utilisent principalement JSON avec `data`, parfois `message`, et les codes HTTP adaptés : `200`, `201`, `204`, `400`, `401`, `403`, `404`, `409` ou `500` suivant le cas.
+
+### 2.6. Exemples de validations Zod
 
-L'application repose sur un monorepo séparant le front-end et le back-end.
+- Inscription : e-mail valide de 255 caractères au maximum ; pseudonyme de 3 à 50 caractères, en minuscules, chiffres ou `_` ; mot de passe de 12 à 128 caractères.
+- Profil : nom, e-mail et mot de passe actuel requis ; nouveau mot de passe facultatif, de 12 à 128 caractères.
+- Articles : titre de 5 à 255 caractères, contenu de 20 à 10 000 caractères, `topicId` au format UUID.
+- Commentaires : contenu de 1 à 2 000 caractères, identifiant d'article UUID.
+- Paramètres : recherche de thèmes limitée à 100 caractères ; tri des articles limité à `newest` ou `oldest`.
 
-**Flux principal :**
+Les contrôleurs utilisent notamment `z.strictObject()` pour rejeter les propriétés inattendues. Le fil d'actualité est filtré avec Prisma selon les abonnements de l'utilisateur et limité à **50 articles** par requête.
 
-Navigateur → Next.js / React → API REST Express → Controller → Service → Repository → Prisma → PostgreSQL.
+## 3. Interface utilisateur et intégration front/back
 
-Chaque couche possède une responsabilité :
+Les écrans suivent les maquettes fournies pour MDD, avec des déclinaisons desktop et mobile. Les pages couvrent l'accueil, l'inscription, la connexion, les thèmes, les articles, la création d'article, le détail d'article et le profil.
 
-- **Front-end :** affichage, formulaires, navigation et interactions utilisateur.
-- **Controller :** réception des requêtes HTTP et validation des données.
-- **Service :** logique métier et gestion des exceptions.
-- **Repository :** accès aux données à travers Prisma.
-- **PostgreSQL :** persistance des utilisateurs, thèmes, abonnements, articles et commentaires.
+- Les formulaires interactifs et les listes utilisent des **Client Components** et des appels `fetch` vers l'API Express.
+- `frontend/lib/api-client.ts` récupère le jeton via `GET /api/auth/csrf`, puis l'envoie dans l'en-tête `X-CSRF-Token` pour les mutations `POST`, `PATCH` et `DELETE`.
+- `frontend/app/(protected)/layout.tsx` vérifie la session côté serveur avant l'accès aux pages protégées.
+- `frontend/lib/redirect-if-authenticated.ts` redirige vers `/topics` un utilisateur déjà connecté qui consulte une page d'accueil, de connexion ou d'inscription.
+- Les états de chargement, les erreurs réseau et les actions de nouvelle tentative sont gérés sur les écrans concernés.
 
-**Organisation simplifiée :**
+Les captures des interfaces sont conservées dans [`docs/screenshots/`](docs/screenshots/) : **16 fichiers** couvrant huit vues en formats desktop et mobile. Elles servent de support à la vérification responsive et à la présentation orale ; elles ne constituent pas à elles seules une preuve d'équivalence pixel par pixel aux maquettes.
 
-| Dossier                             | Contenu                                |
-| ----------------------------------- | -------------------------------------- |
-| `frontend/app`                      | Pages et layouts Next.js               |
-| `frontend/features`                 | Composants métier React                |
-| `frontend/components`               | Composants partagés et navigation      |
-| `frontend/lib`                      | Client API et fonctions utilitaires    |
-| `backend/src`                       | API Express et architecture en couches |
-| `backend/prisma`                    | Schéma, migrations et seed             |
-| `frontend/tests` et `backend/tests` | Tests Vitest                           |
-| `e2e`                               | Parcours Playwright                    |
-| `scripts`                           | Préparation de la base E2E et rapports |
+## 4. Installation et configuration locale
 
-### 2.2 Choix techniques
+### 4.1. Prérequis
 
-| Technologie                     | Rôle et justification                |
-| ------------------------------- | ------------------------------------ |
-| Next.js 16 / React 19           | Interface et routage avec App Router |
-| TypeScript                      | Typage et maintenabilité             |
-| Express 5                       | API REST indépendante du front-end   |
-| Prisma 7                        | Accès typé à la base et migrations   |
-| PostgreSQL 17                   | Stockage relationnel                 |
-| Docker Compose                  | Reproductibilité des environnements  |
-| Tailwind CSS 4                  | Intégration des maquettes responsive |
-| Zod 4                           | Validation des entrées               |
-| Argon2                          | Hachage des mots de passe            |
-| Vitest / Supertest / Playwright | Tests unitaires, HTTP et E2E         |
+- Node.js **22.22.2** et npm ; Git.
+- Docker Desktop avec Docker Compose pour PostgreSQL.
+- Navigateur Chromium pour les tests Playwright (installation ci-dessous).
 
-**Pourquoi une API Express indépendante ?**
+### 4.2. Récupération du projet
 
-Cette architecture sépare clairement l'interface, les règles métier et l'accès aux données. Elle facilite les tests et permet la réutilisation future de l'API.
+```bash
+git clone https://github.com/AlainDev97/DFSJS-Prenez-en-charge-le-d-veloppement-d-une-application-full-stack-JavaScript-compl-te.git
+cd DFSJS-Prenez-en-charge-le-d-veloppement-d-une-application-full-stack-JavaScript-compl-te
+npm ci
+npm --prefix frontend ci
+npm --prefix backend ci
+```
 
-En contrepartie, elle nécessite une configuration CORS et une gestion explicite des sessions entre Next.js et Express.
+### 4.3. Variables d'environnement
 
-### 2.3 Modèle de données
+Créer `.env` à partir de `.env.example`, `backend/.env` à partir de `backend/.env.example` et, si nécessaire, `frontend/.env.local`.
 
-Le schéma Prisma repose sur cinq modèles principaux :
+**Exemple `.env` (racine) :**
 
-| Modèle         | Responsabilité                           |
-| -------------- | ---------------------------------------- |
-| `User`         | Comptes et informations des utilisateurs |
-| `Topic`        | Thèmes de programmation                  |
-| `Subscription` | Relation utilisateur–thème               |
-| `Post`         | Articles publiés                         |
-| `Comment`      | Commentaires associés aux articles       |
+```dotenv
+POSTGRES_USER=mdd_user
+POSTGRES_PASSWORD=change_me
+POSTGRES_DB=mdd_db
+```
 
-Les relations utilisent des clés étrangères. Les identifiants sont des UUID et les contraintes d'unicité évitent notamment les doublons de comptes et d'abonnements.
+**Exemple `backend/.env` :**
 
-Les migrations sont versionnées dans `backend/prisma/migrations`.
+```dotenv
+PORT=4000
+FRONTEND_URL=http://localhost:3000
+DATABASE_URL="postgresql://mdd_user:change_me@localhost:5433/mdd_db?schema=public"
+SEED_PASSWORD="ChangeMe123!"
+SESSION_SECRET="replace_with_a_random_secret_at_least_32_bytes"
+```
 
-Le seed de développement initialise des utilisateurs fictifs, des thèmes, des abonnements, des articles et des commentaires.
+**Exemple `frontend/.env.local` (facultatif en local standard) :**
 
-### 2.4 API REST
+```dotenv
+NEXT_PUBLIC_API_URL=http://localhost:4000
+API_INTERNAL_URL=http://localhost:4000
+```
 
-Les principaux endpoints sont regroupés par domaine :
+Le mot de passe de `DATABASE_URL` doit correspondre à `POSTGRES_PASSWORD`. Le secret de session doit contenir au moins **32 octets**. Générer une valeur aléatoire avec :
 
-| Domaine          | Endpoints principaux                                                |
-| ---------------- | ------------------------------------------------------------------- |
-| Santé            | `GET /api/health`, `GET /api/health/db`                             |
-| Authentification | `POST /api/auth/register`, `/login`, `/logout`                      |
-| Session / profil | `GET /api/auth/me`, `PATCH /api/auth/me`                            |
-| Sécurité         | `GET /api/auth/csrf`                                                |
-| Thèmes           | `GET /api/topics` avec recherche facultative                        |
-| Abonnements      | `GET/POST /api/subscriptions`, `DELETE /api/subscriptions/:topicId` |
-| Articles         | `GET/POST /api/articles`, `GET /api/articles/:id`                   |
-| Commentaires     | `POST /api/articles/:id/comments`                                   |
+```bash
+node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+```
 
-Les données reçues sont validées par Zod avant traitement. Les opérations nécessitant un utilisateur connecté utilisent son identifiant provenant de la session, et non d'un champ librement transmis par le navigateur.
+**Sécurité :** ces valeurs sont des exemples. Ne pas versionner de vrais secrets : les fichiers `.env` sont exclus de Git.
 
----
+### 4.4. Préparation de PostgreSQL
 
-## 3. Authentification et sécurité
+```bash
+npm run db:up
+# Attendre que le conteneur PostgreSQL soit opérationnel.
+cd backend
+npx prisma migrate deploy
+npx prisma generate
+cd ..
+npm run db:seed
+```
 
-### 3.1 Gestion des sessions
+Le seed fournit des données fictives : deux comptes, quatre thèmes, quatre abonnements, deux articles et deux commentaires. Les comptes de démonstration sont `alice@example.test` et `bob@example.test` ; le mot de passe initial est celui de `SEED_PASSWORD`. Le seed n'écrase pas les mots de passe déjà enregistrés.
 
-L'authentification utilise `express-session` avec `connect-pg-simple` pour stocker les sessions dans PostgreSQL.
+### 4.5. Démarrer et arrêter
 
-Le navigateur reçoit un cookie de session `mdd.sid` avec l'attribut `HttpOnly`.
+```bash
+npm run dev
+```
 
-Les mots de passe sont hachés avec Argon2 et ne sont jamais retournés par l'API.
+| Service                  | Adresse                               |
+| ------------------------ | ------------------------------------- |
+| Interface Next.js        | `http://localhost:3000`               |
+| API Express              | `http://localhost:4000`               |
+| Santé API                | `http://localhost:4000/api/health`    |
+| Santé base               | `http://localhost:4000/api/health/db` |
+| PostgreSQL développement | `localhost:5433`                      |
 
-Les principales protections implémentées sont :
+`npm run dev` démarre simultanément le front-end et le back-end. Interrompre les serveurs avec `Ctrl+C` ; `npm run db:down` arrête PostgreSQL sans supprimer son volume de données persistant.
 
-- Validation des données avec Zod.
-- Middleware `requireAuth` pour les routes privées.
-- Protection CSRF des requêtes de modification.
-- Limitation des tentatives d'authentification avec `express-rate-limit`.
-- En-têtes de sécurité Helmet et configuration CORS.
-- Contrôle des erreurs HTTP : 400, 401, 403, 404 et 409 selon les situations.
+## 5. Authentification, sécurité et gestion des erreurs
 
-### 3.2 Protection des pages Next.js
+### 5.1. Sessions et autorisations
 
-Les pages privées utilisent `app/(protected)/layout.tsx`, qui vérifie la session Express avant d'autoriser l'accès.
+- `express-session` et `connect-pg-simple` enregistrent les sessions serveur dans PostgreSQL, table `user_sessions`.
+- Le cookie `mdd.sid` utilise `HttpOnly` et `SameSite=Lax` ; `Secure` est activé si `NODE_ENV=production`.
+- Les mots de passe sont hachés et vérifiés avec **Argon2** ; l'API retourne les données publiques du compte, sans `passwordHash`.
+- Le middleware `requireAuth` protège les routes privées ; les identifiants d'auteur proviennent de la session et non de la requête du client.
+- Les changements de profil exigent la vérification du mot de passe actuel ; la connexion régénère l'identifiant de session.
 
-Une vérification inverse a également été ajoutée aux pages publiques.
+### 5.2. Protections HTTP
 
-La fonction serveur **`redirectIfAuthenticated()`**, située dans `frontend/lib/redirect-if-authenticated.ts`, vérifie la présence du cookie puis sa validité auprès de `GET /api/auth/me`.
+- `helmet` : en-têtes HTTP de sécurité.
+- `cors` : origine du front-end configurée et transmission des cookies autorisée.
+- `csrfProtection` : vérification d'un jeton CSRF pour les méthodes de modification ; méthodes de lecture exclues.
+- `express-rate-limit` : limite de **10 échecs de connexion en 15 minutes** par IP et de **5 inscriptions par heure** par IP.
+- Zod et Prisma : validation des données et opérations relationnelles typées, sans interpolation SQL manuelle dans les repositories.
 
-Son comportement est le suivant :
+### 5.3. Middleware centralisé d'erreurs
 
-| Page                               | Utilisateur non connecté | Utilisateur connecté  |
-| ---------------------------------- | ------------------------ | --------------------- |
-| `/`                                | Accueil                  | Redirection `/topics` |
-| `/login`                           | Connexion                | Redirection `/topics` |
-| `/register`                        | Inscription              | Redirection `/topics` |
-| `/topics`, `/articles`, `/profile` | Redirection `/login`     | Accès autorisé        |
+Le fichier `backend/src/middleware/error.middleware.ts` fournit `errorHandler`, déclaré **après toutes les routes** dans `backend/src/app.ts`.
 
-Une session expirée (HTTP 401) autorise l'accès aux pages publiques. Une erreur inattendue de l'API est remontée plutôt que d'être interprétée comme une déconnexion.
+- Les contrôleurs répondent eux-mêmes aux erreurs métier attendues (`400`, `401`, `404`, `409`, etc.).
+- Dans Express 5, les exceptions inattendues levées par les contrôleurs `async` atteignent le middleware centralisé.
+- Le middleware conserve le code de certaines erreurs HTTP `4xx`, notamment un corps JSON invalide.
+- Pour une erreur interne, il journalise l'exception côté serveur et renvoie au navigateur un message JSON générique avec statut `500` : `{"error":"Une erreur interne est survenue."}`.
 
-Cette fonction partagée évite de dupliquer la logique dans les trois pages publiques.
+Les **deux tests** du middleware vérifient la réponse 500 sans fuite du message technique et la réponse 400 sur JSON invalide. Les détails des erreurs restent accessibles dans les journaux serveur ; pour un hébergement public futur, un filtrage des données sensibles et une stratégie de journalisation devront être étudiés.
 
----
+## 6. Tests automatisés et couverture
 
-## 4. Tests et qualité
+### 6.1. Stratégie
 
-### 4.1 Stratégie de test
+| Niveau               | Outils                                            | Objectif                                                       |
+| -------------------- | ------------------------------------------------- | -------------------------------------------------------------- |
+| Unitaire / composant | Vitest et React Testing Library                   | Services, règles métier, formulaires et interactions           |
+| Intégration HTTP     | Vitest et Supertest                               | Authentification, validations, codes HTTP et contrôles d'accès |
+| End-to-end           | Playwright, Chromium, Express, Prisma, PostgreSQL | Parcours utilisateurs et persistance réelle                    |
 
-Trois niveaux de tests ont été mis en place :
+Les tests isolent les dépendances avec des mocks lorsque cela est utile. Les scénarios E2E utilisent une base PostgreSQL distincte et vérifient les interactions avec de vraies données.
 
-- **Unitaires et composants :** logique métier et interactions React avec Vitest.
-- **HTTP :** validation, authentification, sécurité et réponses des endpoints avec Supertest.
-- **E2E :** parcours réels dans Chromium avec Playwright, Next.js, Express et PostgreSQL.
+### 6.2. Dernière campagne complète — 23/11/2026
 
-Les tests unitaires utilisent des mocks pour isoler les composants et repositories. Les tests E2E complètent cette approche en vérifiant les interactions et la persistance sur une base réelle.
+La commande **`npm run test:all` s'est terminée avec succès** après l'ajout du middleware d'erreurs.
 
-### 4.2 Résultats
+| Suite                 |                Fichiers | Tests réussis | Échecs |
+| --------------------- | ----------------------: | ------------: | -----: |
+| Front-end Vitest      |                       9 |        **56** |      0 |
+| Back-end Vitest       |                      12 |       **103** |      0 |
+| Playwright / Chromium | 4 fichiers de scénarios |         **5** |      0 |
+| **Total**             |                         |       **164** |  **0** |
 
-**Dernière campagne complète : 14/11/2026.**
+Les cinq parcours E2E valident : la publication d'un article et d'un commentaire avec persistance ; la redirection d'un visiteur non authentifié ; la connexion et la navigation ; l'inscription et la modification du profil ; l'abonnement et le désabonnement.
 
-| Suite                                      | Tests réussis |
-| ------------------------------------------ | ------------: |
-| Front-end — Vitest / React Testing Library |            56 |
-| Back-end — Vitest / Supertest              |           101 |
-| E2E — Playwright / Chromium                |             5 |
-| **Total**                                  |       **162** |
+La préparation E2E a confirmé l'application de la migration disponible, la génération du client Prisma et l'insertion des données fictives dans `mdd_e2e_db`.
 
-Les cinq parcours E2E couvrent l'accès non authentifié, la connexion, les abonnements, la publication d'un article et d'un commentaire, ainsi que l'inscription et la modification du profil.
+### 6.3. Résultats de couverture Vitest / V8
 
-**Résultat : 162 tests réussis, aucun échec.**
+| Indicateur   | Front-end | Back-end | Global pondéré |
+| ------------ | --------: | -------: | -------------: |
+| Instructions |   82,09 % |  82,83 % |    **82,38 %** |
+| Branches     |   76,65 % |  72,97 % |    **75,65 %** |
+| Fonctions    |   75,86 % |  95,16 % |    **82,58 %** |
+| Lignes       |   83,30 % |  83,24 % |    **83,28 %** |
 
-### 4.3 Couverture du code
+**L'objectif de couverture de 70 % est dépassé sur les quatre indicateurs**, séparément sur chaque application et globalement. Le total global est calculé à partir des nombres d'éléments couverts, et non par moyenne simple des pourcentages.
 
-La couverture est mesurée avec Vitest et V8.
+La mesure concerne les fichiers inclus dans la configuration Vitest, pas l'intégralité théorique des parcours ; les tests Playwright ne contribuent pas à ces pourcentages. Certains composants ou pages ont une couverture individuelle inférieure au seuil sans empêcher l'objectif global d'être atteint.
 
-| Indicateur   | Front-end | Back-end |      Global |
-| ------------ | --------: | -------: | ----------: |
-| Instructions |   82,94 % |  80,60 % | **82,04 %** |
-| Branches     |   76,65 % |  71,21 % | **75,29 %** |
-| Fonctions    |   77,19 % |  95,08 % | **83,43 %** |
-| Lignes       |   84,20 % |  80,99 % | **82,93 %** |
+### 6.4. Exécution et preuves
 
-**L'objectif de 70 % est atteint sur les quatre indicateurs, séparément pour le front-end et le back-end.**
+```bash
+# Campagne complète depuis la racine (Docker démarré, serveurs de dev arrêtés)
+npm run test:all
 
-La couverture globale est pondérée à partir des éléments réellement couverts et non calculée comme une moyenne simple.
+# Arrêter la base E2E après la campagne
+npm run db:e2e:down
 
-Les tests Playwright ne sont pas inclus dans ces pourcentages, car leur exécution n'est pas instrumentée pour la couverture V8.
+# Couverture seule, puis résumé
+npm run test:coverage
+npm run test:summary
 
-Les repositories affichent 100 % de couverture Vitest grâce à des tests avec Prisma simulé. Cela ne signifie pas que chaque requête a été testée individuellement sur PostgreSQL.
+# Ouvrir le rapport Playwright de la dernière exécution
+npm run test:e2e:report
+```
 
-### 4.4 Exécution des tests
+Pour configurer l'E2E, installer Chromium (`npx playwright install chromium`) puis copier `.env.e2e.example` vers `.env.e2e` et adapter les valeurs de test. Les services sont isolés sur les ports **3100** (Next.js), **4100** (Express) et **5434** (PostgreSQL).
 
-Une commande centralisée a été ajoutée au `package.json` racine :
+Les rapports HTML Vitest sont générés dans `frontend/coverage/` et `backend/coverage/`. Le rapport HTML Playwright est généré dans `playwright-report/`. Ces répertoires sont **exclus du versionnement Git** et peuvent être régénérés avec les commandes indiquées ; les résultats synthétiques sont consignés ici et dans le PDF de justification technique.
 
-`npm run test:all`
+### 6.5. Contrôles complémentaires
 
-Elle exécute les tests front-end et back-end avec couverture, démarre la base PostgreSQL E2E, prépare les données, lance Playwright et génère un résumé global.
+```bash
+npm --prefix frontend run lint
+npm --prefix backend run typecheck
+npm run build
+npm audit
+npm --prefix frontend audit
+npm --prefix backend audit
+```
 
-| Commande                  | Utilité                          |
-| ------------------------- | -------------------------------- |
-| `npm run test:all`        | Campagne complète                |
-| `npm run test:coverage`   | Couverture front-end et back-end |
-| `npm run test:summary`    | Résumé global de couverture      |
-| `npm run test:e2e:report` | Rapport HTML Playwright          |
-| `npm run db:e2e:down`     | Arrêt de PostgreSQL E2E          |
-| `npm run build`           | Compilation du front et du back  |
+Le `typecheck`, les **103 tests back-end** et le **build back-end** ont été validés après l'intégration du middleware. L'audit technique précédent a aussi porté sur les compilations, les dépendances et les contrôles de qualité. La campagne `test:all` valide les tests et la couverture ; **elle ne remplace pas** l'exécution séparée d'ESLint, des builds et de `npm audit`.
 
-Les rapports HTML Vitest sont disponibles dans les répertoires `frontend/coverage` et `backend/coverage`.
+## 7. Performances et conformité
 
-Les tests E2E utilisent une base séparée `mdd_e2e_db` sur le port 5434, évitant de modifier la base de développement. Les données temporaires créées pendant les scénarios sont nettoyées.
+Des audits Lighthouse ont été réalisés sur les principales interfaces et conservés dans [`docs/lighthouse/`](docs/lighthouse/).
 
-Les contrôles complémentaires comprennent ESLint, TypeScript et les builds applicatifs. Après les dernières modifications de redirection, une nouvelle campagne complète permettra d'actualiser les résultats si nécessaire.
+- **Accueil mobile :** performance 92/100 ; accessibilité, bonnes pratiques et SEO à 100/100 lors de l'audit consigné.
+- **Liste des articles mobile :** performance 67/100 ; optimisation possible si le produit évolue.
+- **Optimisations présentes :** composants serveur lorsque pertinents, `next/image`, requêtes Prisma ciblées, sélection des champs utiles, limitation à 50 articles dans le fil et gestion des états de chargement.
 
----
+Les captures Lighthouse rendent compte des mesures réalisées à un instant donné ; elles ne garantissent pas les mêmes scores dans tous les environnements. Les mentions légales sont accessibles à `/legal` et la politique de confidentialité à `/privacy`.
 
-## 5. Revue technique et améliorations
+## 8. Revue technique et supervision de l'IA
 
-### 5.1 Principales décisions et corrections
+### 8.1. Corrections issues de la revue
 
-| Problème ou besoin                        | Solution retenue                              |
-| ----------------------------------------- | --------------------------------------------- |
-| Paramètres HTTP inattendus                | Validation stricte avec `z.strictObject()`    |
-| Accès non autorisé aux pages privées      | Layout protégé et vérification Express        |
-| Accès aux pages publiques après connexion | Fonction partagée `redirectIfAuthenticated()` |
-| Protection des mutations                  | Jetons CSRF et session serveur                |
-| Écarts avec les maquettes Figma           | Corrections du responsive et de la navigation |
-| Risques de régression                     | Tests Vitest, Supertest et Playwright         |
-| Besoin d'une campagne reproductible       | Script `test:all` et résumé de couverture     |
+| Point identifié                                   | Décision et vérification                                                                                                              |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Fil d'actualité initialement non filtré           | Filtre Prisma sur les abonnements de l'utilisateur, tri conservé et tests adaptés                                                     |
+| Dépendances vulnérables                           | Mises à jour ciblées et adaptation de la dépendance transitive `effect` utilisée par Prisma 7 ; contrôles `npm audit` lors de l'audit |
+| Erreurs inattendues répétées dans les contrôleurs | Middleware `errorHandler` centralisé, propagation via Express 5 et deux tests dédiés                                                  |
+| Accès aux pages après connexion                   | Fonction serveur partagée `redirectIfAuthenticated()` pour limiter les doublons                                                       |
+| Cohérence du projet                               | Actualisation de la documentation, de la configuration et des tests associés                                                          |
 
-La revue technique de la première fonctionnalité est également conservée dans `docs/REVUE_TECHNIQUE_ETAPE_4_MDD.md`.
+Le correctif de dépendance transitive doit être réévalué lors d'une future mise à jour majeure de Prisma. La revue intermédiaire de la consultation des thèmes est conservée dans [`docs/REVUE_TECHNIQUE_ETAPE_4_MDD.md`](docs/REVUE_TECHNIQUE_ETAPE_4_MDD.md).
 
-### 5.2 Performance
+### 8.2. Tâches assistées par IA et validation humaine
 
-Plusieurs pratiques limitent les traitements inutiles :
+**ChatGPT** a été utilisé comme aide à l'analyse de l'architecture, à la proposition de code, aux tests et à la documentation. **Codex** a été mobilisé pour la revue technique et l'identification de risques fonctionnels ou de dépendances.
 
-- Sélection des champs nécessaires dans les requêtes Prisma.
-- Limitation des résultats sur les listes principales.
-- Tri des articles côté back-end.
-- Annulation de requêtes avec `AbortController`.
-- Séparation des responsabilités entre les composants et les services.
+Le développeur a conservé la décision finale : comparaison aux spécifications et aux maquettes, lecture du code proposé, corrections ciblées, exécution des vérifications et rejet des propositions non nécessaires au MVP.
 
-### Audits Lighthouse
+Exemple concret : après signalement du défaut de filtrage du fil d'actualité, la correction a été vérifiée au regard du besoin fonctionnel puis contrôlée par les tests. L'usage de l'IA s'est donc inscrit dans une démarche de **supervision**, et non de validation automatique de ses réponses.
 
-Des audits Lighthouse ont été réalisés sur les principales pages de MDD, en versions Desktop et Mobile.
+## 9. Documentation utilisateur — FAQ
 
-Les résultats Desktop sont globalement satisfaisants. Sur Mobile, la page d'accueil obtient 92/100 en performance et 100/100 sur les trois autres catégories. La liste des articles obtient 67/100 en performance, ce qui constitue un axe d'optimisation.
+**Comment créer un compte ?** Depuis l'accueil, sélectionner « S'inscrire », renseigner pseudonyme, e-mail et mot de passe, puis valider.
 
-Les captures des audits sont disponibles dans [`docs/lighthouse/`](docs/lighthouse/).
+**Comment se connecter ?** Utiliser la page « Se connecter » avec son adresse e-mail et son mot de passe.
 
-Les analyses de performance seront complétées par l'étude des métriques et recommandations Lighthouse.
+**Comment suivre un thème ?** Ouvrir « Thèmes », utiliser le bouton d'abonnement ; un désabonnement est possible depuis la liste ou le profil.
 
-Les points d'amélioration identifiés comprennent la pagination des listes volumineuses, la gestion du cache et la suppression des avertissements non bloquants de Next.js.
+**Comment fonctionne le fil d'actualité ?** Il affiche les articles des thèmes suivis par le compte connecté, triés du plus récent au plus ancien ou inversement.
 
----
+**Comment publier ?** Ouvrir « Articles », cliquer sur « Créer un article », choisir un thème, compléter le titre et le contenu, puis valider.
 
-## 6. Supervision du travail assisté par IA
+**Comment commenter ?** Ouvrir un article et envoyer un commentaire via le formulaire prévu.
 
-ChatGPT a été utilisé comme assistant pour proposer des structures de code, des implémentations, des scénarios de tests et des améliorations documentaires.
+**Comment modifier son profil ?** Ouvrir « Profil », modifier les informations et confirmer avec le mot de passe actuel.
 
-Les principales tâches déléguées ont concerné :
+**Que faire en cas d'échec de chargement ?** Réessayer depuis l'interface et vérifier l'état du front-end, de l'API et de PostgreSQL dans l'environnement local.
 
-- La proposition de composants React et de couches API.
-- La préparation de tests unitaires, HTTP et E2E.
-- L'aide à la configuration de l'environnement PostgreSQL de test.
-- L'analyse des erreurs techniques et des rapports de couverture.
-- La rédaction et la synthèse de la documentation.
+## 10. Livrables, maintenance et limites
 
-**La supervision a été assurée par le développeur**, qui a défini les besoins, étudié les propositions, vérifié leur cohérence avec l'architecture et les maquettes, puis exécuté les tests avant validation.
+### 10.1. Éléments disponibles
 
-Certaines suggestions ont nécessité des corrections, notamment sur les interfaces et la configuration E2E.
+- [Code et historique du projet sur GitHub](https://github.com/AlainDev97/DFSJS-Prenez-en-charge-le-d-veloppement-d-une-application-full-stack-JavaScript-compl-te).
+- [`README.md`](README.md) : installation, configuration, commandes et dépannage local.
+- [`backend/prisma/schema.prisma`](backend/prisma/schema.prisma) : définition des entités et relations ; migrations dans le même dossier.
+- [`docs/screenshots/`](docs/screenshots/) : 16 captures des huit vues desktop/mobile.
+- [`docs/lighthouse/`](docs/lighthouse/) : huit captures d'audits Lighthouse.
+- [`docs/REVUE_TECHNIQUE_ETAPE_4_MDD.md`](docs/REVUE_TECHNIQUE_ETAPE_4_MDD.md) : revue technique intermédiaire.
+- Tests dans `frontend/tests/`, `backend/tests/` et `e2e/`, avec génération locale des rapports HTML.
+- PDF distinct « Documentation et rapport du projet MDD » : justification des choix techniques, schémas, FAQ, audit et références aux annexes.
 
-L'utilisation de l'IA n'a donc pas remplacé les décisions techniques ni la validation humaine. Le développeur reste responsable du code et des livrables.
+### 10.2. Exploitation et évolutions
 
----
+**Maintenance locale :** conserver les secrets hors Git, relancer les migrations si le schéma évolue, exécuter les tests et les vérifications de qualité avant une livraison, et consulter les logs serveur en cas d'erreur.
 
-## 7. Livrables et prochaines étapes
+**Déploiement :** aucun déploiement public n'a été réalisé dans le périmètre validé. Une éventuelle mise en production exigerait un hébergement Next.js et Express, une base PostgreSQL accessible de manière sécurisée, HTTPS, des secrets et variables d'environnement adaptés, une stratégie de logs et de sauvegarde et des vérifications dans l'environnement cible. Ces opérations ne sont **pas présentées comme déjà réalisées**.
 
-### 7.1 Livrables
-
-Les principaux éléments disponibles sont :
-
-- Application Next.js et API Express.
-- Schéma Prisma, migrations et seed.
-- Documentation technique et README.
-- Tests automatisés et rapports de couverture.
-- Tests E2E et rapport Playwright.
-- Historique Git, branches et Pull Requests.
-- Revue technique de l'étape 4.
-
-### Captures des interfaces
-
-Des captures d'écran des principales pages de MDD ont été réalisées en versions Desktop et Mobile afin d'illustrer la conformité aux maquettes Figma et l'adaptation responsive de l'application.
-
-Les captures sont disponibles dans le dossier [`docs/screenshots/`](docs/screenshots/).
-
-Les rapports d'audit Lighthouse sont également conservés dans [`docs/lighthouse/`](docs/lighthouse/).
-
-### 7.2 Points restant à finaliser
-
-- Réaliser les audits Lighthouse et d'accessibilité.
-- Corriger les avertissements techniques pertinents.
-- Vérifier les derniers builds et la campagne complète de tests.
-- Vérifier la conformité avec la fiche d'autoévaluation OpenClassrooms.
-- Préparer les captures, preuves et démonstrations pour la soutenance.
-
-### 7.3 Conclusion
-
-Le projet MDD dispose d'une architecture full-stack séparant les responsabilités, d'une authentification sécurisée et des principales fonctionnalités communautaires prévues.
-
-La campagne automatisée de **162 tests réussis** et les couvertures supérieures à **70 % sur les quatre indicateurs** fournissent des preuves de qualité et de non-régression.
-
-Les prochaines étapes portent principalement sur les audits complémentaires, la consolidation des livrables et la préparation de la soutenance.
+**Axes d'amélioration non prioritaires pour le MVP :** performance de certaines pages mobiles, pagination au-delà des limites actuelles, stratégie de cache, revue de la journalisation en production et maintien à jour des dépendances.
 
 ---
 
 **Références :** [Next.js](https://nextjs.org/docs) · [Express](https://expressjs.com/) · [Prisma](https://www.prisma.io/docs) · [Vitest](https://vitest.dev/) · [Playwright](https://playwright.dev/)
-
-Version 0.7.0, 23 novembres 2026.
